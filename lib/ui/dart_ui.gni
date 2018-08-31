@@ -17,6 +17,7 @@ dart_ui_files = [
   "$flutter_root/lib/ui/text.dart",
   "$flutter_root/lib/ui/ui.dart",
   "$flutter_root/lib/ui/window.dart",
+  "$flutter_root/lib/ui/yoga.dart",
 ]
 
 dart_ui_path = "$flutter_root/lib/ui/ui.dart"

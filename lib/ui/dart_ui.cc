@@ -9,6 +9,7 @@
 #include "flutter/lib/ui/compositing/scene_builder.h"
 #include "flutter/lib/ui/dart_runtime_hooks.h"
 #include "flutter/lib/ui/isolate_name_server/isolate_name_server_natives.h"
+#include "flutter/lib/ui/layout/yoga_node.h"
 #include "flutter/lib/ui/painting/canvas.h"
 #include "flutter/lib/ui/painting/codec.h"
 #include "flutter/lib/ui/painting/engine_layer.h"
@@ -89,6 +90,7 @@ void DartUI::InitForGlobal() {
     SemanticsUpdateBuilder::RegisterNatives(g_natives);
     Vertices::RegisterNatives(g_natives);
     Window::RegisterNatives(g_natives);
+    YogaNode::RegisterNatives(g_natives);
 
     // Secondary isolates do not provide UI-related APIs.
     g_natives_secondary = new tonic::DartLibraryNatives();

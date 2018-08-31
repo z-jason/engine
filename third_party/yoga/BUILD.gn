@@ -1,0 +1,33 @@
+# TODO(kaikaiz): Copyright.
+
+config("yoga_config") {
+  visibility = [ ":*" ]
+  include_dirs = [ "src" ]
+}
+
+source_set("yoga") {
+  sources = [
+    "src/Utils.cpp",
+    "src/Utils.h",
+    "src/YGConfig.cpp",
+    "src/YGConfig.h",
+    "src/YGEnums.cpp",
+    "src/YGEnums.h",
+    "src/YGFloatOptional.cpp",
+    "src/YGFloatOptional.h",
+    "src/YGLayout.cpp",
+    "src/YGLayout.h",
+    "src/YGMacros.h",
+    "src/YGNode.cpp",
+    "src/YGNode.h",
+    "src/YGNodePrint.cpp",
+    "src/YGNodePrint.h",
+    "src/YGStyle.cpp",
+    "src/YGStyle.h",
+    "src/Yoga-internal.h",
+    "src/Yoga.cpp",
+    "src/Yoga.h",
+  ]
+
+  public_configs = [ ":yoga_config" ]
+}

@@ -19,6 +19,10 @@ source_set("ui") {
     "isolate_name_server/isolate_name_server.h",
     "isolate_name_server/isolate_name_server_natives.cc",
     "isolate_name_server/isolate_name_server_natives.h",
+    "layout/yoga_node.cc",
+    "layout/yoga_node.h",
+    "layout/yoga_rect.cc",
+    "layout/yoga_rect.h",
     "painting/canvas.cc",
     "painting/canvas.h",
     "painting/codec.cc",
@@ -117,5 +121,6 @@ source_set("ui") {
 
   public_deps = [
     "$flutter_root/third_party/txt",
+    "$flutter_root/third_party/yoga",
   ]
 }

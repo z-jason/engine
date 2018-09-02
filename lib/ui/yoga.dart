@@ -79,9 +79,7 @@ class YogaValue {
 
   // TODO(kaikaiz): add assertions for double
   const YogaValue(this.value, this.unit);
-
   const YogaValue.point(double value) : this(value, YogaUnit.point);
-
   const YogaValue.percent(double value) : this(value, YogaUnit.percent);
 
   // This is YGValueAuto.
@@ -342,24 +340,22 @@ class YogaStyle {
 
 class YogaRect {
   final double left;
-
   final double top;
-
   final double width;
-
   final double height;
 
-  YogaRect._(this.left, this.top, this.width, this.height);
+  // Created by engine, not available externally.
+  const YogaRect._(this.left, this.top, this.width, this.height);
 
   @override
   bool operator ==(dynamic other) {
     if (identical(this, other)) return true;
     if (other.runtimeType != runtimeType) return false;
-    final YogaRect typedOther = other;
-    return typedOther.left == left
-        && typedOther.top == top
-        && typedOther.width == width
-        && typedOther.height == height;
+    YogaRect typedOther = other;
+    return typedOther.left == left &&
+        typedOther.top == top &&
+        typedOther.width == width &&
+        typedOther.height == height;
   }
 
   @override
@@ -367,25 +363,32 @@ class YogaRect {
 
   @override
   String toString() =>
-      'YogaRect._(${left.toStringAsFixed(1)}, ${top.toStringAsFixed(1)}, ${width
-          .toStringAsFixed(1)}, ${height.toStringAsFixed(1)})';
+      'YogaRect._(${left.toStringAsFixed(1)}, ${top.toStringAsFixed(1)}, ${width.toStringAsFixed(1)}, ${height.toStringAsFixed(1)})';
 }
 
 // TODO(kaikaiz): I have no idea about NativeFieldWrapperClass2.
 class YogaNode extends NativeFieldWrapperClass2 {
+  // Not available externally. YogaNode is meant to be used as flattened.
+  // TODO(kaikaiz): keep references for children to not lose the underlying C++ object references.
+  List<YogaNode> _children;
+
   YogaNode(YogaStyle style) {
     List<int> intList = new List();
     List<double> doubleList = new List();
     style._encode(intList, doubleList);
+    _children = new List();
     _constructor(Int32List.fromList(intList), Float64List.fromList(doubleList));
   }
 
   void _constructor(Int32List intList, Float64List doubleList)
-  native 'YogaNode_constructor';
+      native 'YogaNode_constructor';
 
   int get _nodeId native 'YogaNode_nodeId';
 
-  void addChild(YogaNode child) => _addChild(child._nodeId);
+  void addChild(YogaNode child) {
+    _children.add(child);
+    _addChild(child._nodeId);
+  }
 
   void _addChild(int childNodeId) native 'YogaNode_addChild';
 
@@ -393,7 +396,7 @@ class YogaNode extends NativeFieldWrapperClass2 {
       _calculateLayout(width, height, direction.index);
 
   void _calculateLayout(double width, double height, int direction)
-  native 'YogaNode_calculateLayout';
+      native 'YogaNode_calculateLayout';
 
   // The flattened layout of the whole tree (including this root node) in Pre-Order-Traversal.
   List<YogaRect> get flattenedLayout native 'YogaNode_flattenedLayout';
@@ -401,37 +404,37 @@ class YogaNode extends NativeFieldWrapperClass2 {
   // Below is only for text node.
   // TODO(kaikaiz): for now copy the behavior from text.dart - we have to find a better way to add text.
 
-  void startParagraphBuilder(ParagraphStyle style) =>
-      _startParagraphBuilder(
-          style._encoded,
-          style._fontFamily,
-          style._fontSize,
-          style._lineHeight,
-          style._ellipsis,
-          ParagraphBuilder._encodeLocale(style._locale));
+  void startParagraphBuilder(ParagraphStyle style) => _startParagraphBuilder(
+      style._encoded,
+      style._fontFamily,
+      style._fontSize,
+      style._lineHeight,
+      style._ellipsis,
+      ParagraphBuilder._encodeLocale(style._locale));
 
-  void _startParagraphBuilder(Int32List encoded,
+  void _startParagraphBuilder(
+      Int32List encoded,
       String fontFamily,
       double fontSize,
       double lineHeight,
       String ellipsis,
       String locale) native 'YogaNode_startParagraphBuilder';
 
-  void pushTextStyle(TextStyle style) =>
-      _pushTextStyle(
-          style._encoded,
-          style._fontFamily,
-          style._fontSize,
-          style._letterSpacing,
-          style._wordSpacing,
-          style._height,
-          ParagraphBuilder._encodeLocale(style._locale),
-          style._background?._objects,
-          style._background?._data,
-          style._foreground?._objects,
-          style._foreground?._data);
+  void pushTextStyle(TextStyle style) => _pushTextStyle(
+      style._encoded,
+      style._fontFamily,
+      style._fontSize,
+      style._letterSpacing,
+      style._wordSpacing,
+      style._height,
+      ParagraphBuilder._encodeLocale(style._locale),
+      style._background?._objects,
+      style._background?._data,
+      style._foreground?._objects,
+      style._foreground?._data);
 
-  void _pushTextStyle(Int32List encoded,
+  void _pushTextStyle(
+      Int32List encoded,
       String fontFamily,
       double fontSize,
       double letterSpacing,

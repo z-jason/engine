@@ -32,15 +32,18 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
     return m_nodeId;
   }
 
+  YogaRect rect() {
+    YGNodeRef node = nodes[m_nodeId];
+    return YogaRect(YGNodeLayoutGetLeft(node), YGNodeLayoutGetTop(node), YGNodeLayoutGetWidth(node), YGNodeLayoutGetHeight(node));
+  }
+
   void addChild(int childNodeId) {
     YGNodeInsertChild(nodes[m_nodeId], nodes[childNodeId], YGNodeGetChildCount(nodes[m_nodeId]));
   }
 
   void calculateLayout(double width, double height, int direction);
 
-  std::vector<YogaRect> flattenedLayout() {
-    return m_flattenedLayout;
-  }
+  std::vector<YogaRect> flattenedLayout();
 
   // TODO(kaikaiz): for now, exactly as those in paragraph_builder.
 
@@ -108,7 +111,13 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
  private:
   static std::vector<YGNodeRef> nodes;
   int m_nodeId;
+
+  double m_lastWidth;
+  double m_lastHeight;
+  int m_lastDirection;
+
   std::vector<YogaRect> m_flattenedLayout;
+
   fml::RefPtr<ParagraphBuilder> m_paragraphBuilder;
   fml::RefPtr<Paragraph> m_paragraph;
   explicit YogaNode(tonic::Int32List &intList, tonic::Float64List &doubleList);

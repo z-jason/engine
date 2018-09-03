@@ -64,6 +64,7 @@ IMPLEMENT_WRAPPERTYPEINFO(ui, YogaNode);
 
 #define FOR_EACH_BINDING(V)          \
   V(YogaNode, nodeId)                \
+  V(YogaNode, rect)                  \
   V(YogaNode, addChild)              \
   V(YogaNode, calculateLayout)       \
   V(YogaNode, flattenedLayout)       \
@@ -93,6 +94,7 @@ YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMod
   Paragraph *paragraph = static_cast<Paragraph *>(YGNodeGetContext(node));
   // TODO(kaikaiz): Yoga won't call this function with both *Exactly* modes. So anyway we'll have to do the layout.
   paragraph->layout(width);
+  // TODO(kaikaiz): figure out why we cannot use paragraph->width().
   float actualWidth = widthMode == YGMeasureModeExactly ? width : std::min(width, (float)paragraph->minIntrinsicWidth());
   float actualHeight = heightMode == YGMeasureModeExactly ? height : std::min(height, (float)paragraph->height());
   return (YGSize){.width = actualWidth, .height = actualHeight};
@@ -238,9 +240,21 @@ YogaNode::~YogaNode() = default;
 
 // TODO(kaikaiz): is there a way to check whether the result is identical (i.e., cached)?
 void YogaNode::calculateLayout(double width, double height, int direction) {
-  YGNodeCalculateLayout(nodes[m_nodeId], width, height, (YGDirection)direction);
+  if (fabs(width - m_lastWidth) < 1e-3 && fabs(height - m_lastHeight) < 1e-3 && direction == m_lastDirection) return;
+
   m_flattenedLayout.clear();
-  GetPreOrderFlattenedLayout(0, 0, nodes[m_nodeId], m_flattenedLayout);
+  // printf("Yoga: starting calculation %.1f %.1f!\n", width, height);
+  YGNodeCalculateLayout(nodes[m_nodeId], width, height, (YGDirection)direction);
+  m_lastWidth = width;
+  m_lastHeight = height;
+  m_lastDirection = direction;
+}
+
+std::vector<YogaRect> YogaNode::flattenedLayout() {
+  if (!m_flattenedLayout.size()) {
+    GetPreOrderFlattenedLayout(0, 0, nodes[m_nodeId], m_flattenedLayout);
+  }
+  return m_flattenedLayout;
 }
 
 }  // namespace blink

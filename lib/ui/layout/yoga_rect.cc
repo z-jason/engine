@@ -23,6 +23,10 @@ Dart_Handle GetYogaRectType() {
 
 }  // namespace
 
+void DartConverter<YogaRect>::SetReturnValue(Dart_NativeArguments args, const YogaRect &val) {
+  Dart_SetReturnValue(args, ToDart(val));
+}
+
 Dart_Handle DartConverter<YogaRect>::ToDart(const YogaRect &val) {
   constexpr int argc = 4;
   Dart_Handle argv[argc] = {

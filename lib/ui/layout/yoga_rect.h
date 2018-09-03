@@ -23,6 +23,7 @@ namespace tonic {
 
 template <>
 struct DartConverter<blink::YogaRect> {
+  static void SetReturnValue(Dart_NativeArguments args, const blink::YogaRect &val);
   static Dart_Handle ToDart(const blink::YogaRect &val);
 };
 

@@ -385,6 +385,8 @@ class YogaNode extends NativeFieldWrapperClass2 {
 
   int get _nodeId native 'YogaNode_nodeId';
 
+  YogaRect get rect native 'YogaNode_rect';
+
   void addChild(YogaNode child) {
     _children.add(child);
     _addChild(child._nodeId);

@@ -368,27 +368,32 @@ class YogaRect {
 
 // TODO(kaikaiz): I have no idea about NativeFieldWrapperClass2.
 class YogaNode extends NativeFieldWrapperClass2 {
-  // Not available externally. YogaNode is meant to be used as flattened.
-  // TODO(kaikaiz): keep references for children to not lose the underlying C++ object references.
-  List<YogaNode> _children;
+  // TODO(kaikaiz): should be final.
+  int _nodeId;
+  YogaNode _owner;
+  YogaNode get owner => _owner;
+  // TODO(kaikaiz): this var also keeps references to not lose the underlying C++ objects.
+  // TODO(kaikaiz): should only expose getChild API.
+  final List<YogaNode> children;
 
-  YogaNode(YogaStyle style) {
-    List<int> intList = new List();
-    List<double> doubleList = new List();
+  YogaNode(YogaStyle style) : children = List() {
+    List<int> intList = List();
+    List<double> doubleList = List();
     style._encode(intList, doubleList);
-    _children = new List();
     _constructor(Int32List.fromList(intList), Float64List.fromList(doubleList));
+    _nodeId = _retrieveNodeId();
   }
 
   void _constructor(Int32List intList, Float64List doubleList)
       native 'YogaNode_constructor';
 
-  int get _nodeId native 'YogaNode_nodeId';
+  int _retrieveNodeId() native 'YogaNode_nodeId';
 
   YogaRect get rect native 'YogaNode_rect';
 
   void addChild(YogaNode child) {
-    _children.add(child);
+    children.add(child);
+    child._owner = this;
     _addChild(child._nodeId);
   }
 
@@ -399,9 +404,6 @@ class YogaNode extends NativeFieldWrapperClass2 {
 
   void _calculateLayout(double width, double height, int direction)
       native 'YogaNode_calculateLayout';
-
-  // The flattened layout of the whole tree (including this root node) in Pre-Order-Traversal.
-  List<YogaRect> get flattenedLayout native 'YogaNode_flattenedLayout';
 
   // Below is only for text node.
   // TODO(kaikaiz): for now copy the behavior from text.dart - we have to find a better way to add text.
@@ -452,7 +454,7 @@ class YogaNode extends NativeFieldWrapperClass2 {
 
   void addText(String text) {
     final String error = _addText(text);
-    if (error != null) throw new ArgumentError(error);
+    if (error != null) throw ArgumentError(error);
   }
 
   String _addText(String text) native 'YogaNode_addText';

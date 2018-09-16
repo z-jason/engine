@@ -44,16 +44,6 @@ YGValue DecodeYGValue(tonic::Int32List &intList, tonic::Float64List &doubleList,
   return (YGValue){.value = (float)doubleList[(*doubleIndex)++], .unit = (YGUnit)intList[(*intIndex)++]};
 }
 
-void GetPreOrderFlattenedLayout(float left, float top, YGNodeRef node, std::vector<YogaRect> &flattenedLayout) {
-  left += YGNodeLayoutGetLeft(node);
-  top += YGNodeLayoutGetTop(node);
-  flattenedLayout.push_back(YogaRect(left, top, YGNodeLayoutGetWidth(node), YGNodeLayoutGetHeight(node)));
-  uint32_t childCount = YGNodeGetChildCount(node);
-  for (uint32_t i = 0; i < childCount; ++i) {
-    GetPreOrderFlattenedLayout(left, top, YGNodeGetChild(node, i), flattenedLayout);
-  }
-}
-
 }  // namespace
 
 static void YogaNode_constructor(Dart_NativeArguments args) {
@@ -67,7 +57,6 @@ IMPLEMENT_WRAPPERTYPEINFO(ui, YogaNode);
   V(YogaNode, rect)                  \
   V(YogaNode, addChild)              \
   V(YogaNode, calculateLayout)       \
-  V(YogaNode, flattenedLayout)       \
   V(YogaNode, startParagraphBuilder) \
   V(YogaNode, pushTextStyle)         \
   V(YogaNode, popTextStyle)          \
@@ -83,8 +72,6 @@ void YogaNode::RegisterNatives(tonic::DartLibraryNatives *natives) {
       {{"YogaNode_constructor", YogaNode_constructor, 3, true},
        FOR_EACH_BINDING(DART_REGISTER_NATIVE)});
 }
-
-std::vector<YGNodeRef> YogaNode::nodes = std::vector<YGNodeRef>();
 
 fml::RefPtr<YogaNode> YogaNode::Create(tonic::Int32List &intList, tonic::Float64List &doubleList) {
   return fml::MakeRefCounted<YogaNode>(intList, doubleList);
@@ -102,104 +89,108 @@ YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMod
 
 // TODO(kaikaiz): those macros are for personal convenience.
 
-#define EXTRACT_ENUM_STYLE(name, type) \
-  if (mask & kStyle##name##Mask) { \
-    YGNodeStyleSet##name(node, (type)intList[intIndex++]); \
+#define EXTRACT_ENUM_STYLE(name, type)                       \
+  if (mask & kStyle##name##Mask) {                           \
+    YGNodeStyleSet##name(m_node, (type)intList[intIndex++]); \
   }
 
-#define EXTRACT_FLOAT_STYLE(name) \
-  if (mask & kStyle##name##Mask) { \
-    YGNodeStyleSet##name(node, (float)doubleList[doubleIndex++]); \
+#define EXTRACT_FLOAT_STYLE(name)                                   \
+  if (mask & kStyle##name##Mask) {                                  \
+    YGNodeStyleSet##name(m_node, (float)doubleList[doubleIndex++]); \
   }
 
-#define EXTRACT_VALUE_STYLE(name) \
-  if (mask & kStyle##name##Mask) { \
-    YGValue value = DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex); \
-    switch(value.unit) { \
-      case YGUnitPoint: \
-        YGNodeStyleSet##name(node, value.value); \
-        break; \
-      case YGUnitPercent: \
-        YGNodeStyleSet##name##Percent(node, value.value); \
-        break; \
-      default: \
-        break; \
-    } \
+#define EXTRACT_VALUE_STYLE(name)                                    \
+  if (mask & kStyle##name##Mask) {                                   \
+    YGValue value =                                                  \
+        DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex); \
+    switch (value.unit) {                                            \
+      case YGUnitPoint:                                              \
+        YGNodeStyleSet##name(m_node, value.value);                   \
+        break;                                                       \
+      case YGUnitPercent:                                            \
+        YGNodeStyleSet##name##Percent(m_node, value.value);          \
+        break;                                                       \
+      default:                                                       \
+        break;                                                       \
+    }                                                                \
   }
 
-#define EXTRACT_VALUE_AUTO_STYLE(name) \
-  if (mask & kStyle##name##Mask) { \
-    YGValue value = DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex); \
-    switch(value.unit) { \
-      case YGUnitPoint: \
-        YGNodeStyleSet##name(node, value.value); \
-        break; \
-      case YGUnitPercent: \
-        YGNodeStyleSet##name##Percent(node, value.value); \
-        break; \
-      case YGUnitAuto: \
-        YGNodeStyleSet##name##Auto(node); \
-        break; \
-      default: \
-        break; \
-    } \
+#define EXTRACT_VALUE_AUTO_STYLE(name)                               \
+  if (mask & kStyle##name##Mask) {                                   \
+    YGValue value =                                                  \
+        DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex); \
+    switch (value.unit) {                                            \
+      case YGUnitPoint:                                              \
+        YGNodeStyleSet##name(m_node, value.value);                   \
+        break;                                                       \
+      case YGUnitPercent:                                            \
+        YGNodeStyleSet##name##Percent(m_node, value.value);          \
+        break;                                                       \
+      case YGUnitAuto:                                               \
+        YGNodeStyleSet##name##Auto(m_node);                          \
+        break;                                                       \
+      default:                                                       \
+        break;                                                       \
+    }                                                                \
   }
 
-#define EXTRACT_EDGE_VALUE_STYLE(name) \
-  if (mask & kStyle##name##Mask) { \
-    int edgeMask = intList[intIndex++]; \
-    for (int i = 0; i < YGEdgeCount; ++i) { \
-      if (edgeMask & (1 << i)) { \
-        YGValue value = DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex); \
-        switch(value.unit) { \
-          case YGUnitPoint: \
-            YGNodeStyleSet##name(node, (YGEdge)i, value.value); \
-            break; \
-          case YGUnitPercent: \
-            YGNodeStyleSet##name##Percent(node, (YGEdge)i, value.value); \
-            break; \
-          default: \
-            break; \
-        } \
-      } \
-    } \
+#define EXTRACT_EDGE_VALUE_STYLE(name)                                     \
+  if (mask & kStyle##name##Mask) {                                         \
+    int edgeMask = intList[intIndex++];                                    \
+    for (int i = 0; i < YGEdgeCount; ++i) {                                \
+      if (edgeMask & (1 << i)) {                                           \
+        YGValue value =                                                    \
+            DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex);   \
+        switch (value.unit) {                                              \
+          case YGUnitPoint:                                                \
+            YGNodeStyleSet##name(m_node, (YGEdge)i, value.value);          \
+            break;                                                         \
+          case YGUnitPercent:                                              \
+            YGNodeStyleSet##name##Percent(m_node, (YGEdge)i, value.value); \
+            break;                                                         \
+          default:                                                         \
+            break;                                                         \
+        }                                                                  \
+      }                                                                    \
+    }                                                                      \
   }
 
-#define EXTRACT_EDGE_FLOAT_STYLE(name) \
-  if (mask & kStyle##name##Mask) { \
-    int edgeMask = intList[intIndex++]; \
-    for (int i = 0; i < YGEdgeCount; ++i) { \
-      if (edgeMask & (1 << i)) { \
-        YGNodeStyleSet##name(node, (YGEdge)i, doubleList[doubleIndex++]); \
-      } \
-    } \
+#define EXTRACT_EDGE_FLOAT_STYLE(name)                                      \
+  if (mask & kStyle##name##Mask) {                                          \
+    int edgeMask = intList[intIndex++];                                     \
+    for (int i = 0; i < YGEdgeCount; ++i) {                                 \
+      if (edgeMask & (1 << i)) {                                            \
+        YGNodeStyleSet##name(m_node, (YGEdge)i, doubleList[doubleIndex++]); \
+      }                                                                     \
+    }                                                                       \
   }
 
-#define EXTRACT_EDGE_VALUE_AUTO_STYLE(name) \
-  if (mask & kStyle##name##Mask) { \
-    int edgeMask = intList[intIndex++]; \
-    for (int i = 0; i < YGEdgeCount; ++i) { \
-      if (edgeMask & (1 << i)) { \
-        YGValue value = DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex); \
-        switch(value.unit) { \
-          case YGUnitPoint: \
-            YGNodeStyleSet##name(node, (YGEdge)i, value.value); \
-            break; \
-          case YGUnitPercent: \
-            YGNodeStyleSet##name##Percent(node, (YGEdge)i, value.value); \
-            break; \
-          case YGUnitAuto: \
-            YGNodeStyleSet##name##Auto(node, (YGEdge)i); \
-            break; \
-          default: \
-            break; \
-        } \
-      } \
-    } \
+#define EXTRACT_EDGE_VALUE_AUTO_STYLE(name)                                \
+  if (mask & kStyle##name##Mask) {                                         \
+    int edgeMask = intList[intIndex++];                                    \
+    for (int i = 0; i < YGEdgeCount; ++i) {                                \
+      if (edgeMask & (1 << i)) {                                           \
+        YGValue value =                                                    \
+            DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex);   \
+        switch (value.unit) {                                              \
+          case YGUnitPoint:                                                \
+            YGNodeStyleSet##name(m_node, (YGEdge)i, value.value);          \
+            break;                                                         \
+          case YGUnitPercent:                                              \
+            YGNodeStyleSet##name##Percent(m_node, (YGEdge)i, value.value); \
+            break;                                                         \
+          case YGUnitAuto:                                                 \
+            YGNodeStyleSet##name##Auto(m_node, (YGEdge)i);                 \
+            break;                                                         \
+          default:                                                         \
+            break;                                                         \
+        }                                                                  \
+      }                                                                    \
+    }                                                                      \
   }
 
 YogaNode::YogaNode(tonic::Int32List &intList, tonic::Float64List &doubleList) {
-  YGNodeRef node = YGNodeNew();
+  m_node = YGNodeNew();
 
   int mask = intList[0];
   int intIndex = 1;
@@ -230,31 +221,9 @@ YogaNode::YogaNode(tonic::Int32List &intList, tonic::Float64List &doubleList) {
   EXTRACT_VALUE_STYLE(MaxWidth);
   EXTRACT_VALUE_STYLE(MaxHeight);
   EXTRACT_FLOAT_STYLE(AspectRatio);
-
-  m_nodeId = nodes.size();
-  nodes.push_back(node);
 }
 
 // TODO(kaikaiz): free the underlaying YGNodeRef?
 YogaNode::~YogaNode() = default;
-
-// TODO(kaikaiz): is there a way to check whether the result is identical (i.e., cached)?
-void YogaNode::calculateLayout(double width, double height, int direction) {
-  if (fabs(width - m_lastWidth) < 1e-3 && fabs(height - m_lastHeight) < 1e-3 && direction == m_lastDirection) return;
-
-  m_flattenedLayout.clear();
-  // printf("Yoga: starting calculation %.1f %.1f!\n", width, height);
-  YGNodeCalculateLayout(nodes[m_nodeId], width, height, (YGDirection)direction);
-  m_lastWidth = width;
-  m_lastHeight = height;
-  m_lastDirection = direction;
-}
-
-std::vector<YogaRect> YogaNode::flattenedLayout() {
-  if (!m_flattenedLayout.size()) {
-    GetPreOrderFlattenedLayout(0, 0, nodes[m_nodeId], m_flattenedLayout);
-  }
-  return m_flattenedLayout;
-}
 
 }  // namespace blink

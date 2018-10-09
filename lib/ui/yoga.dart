@@ -366,7 +366,10 @@ class YogaRect {
       'YogaRect._(${left.toStringAsFixed(1)}, ${top.toStringAsFixed(1)}, ${width.toStringAsFixed(1)}, ${height.toStringAsFixed(1)})';
 }
 
-// TODO(kaikaiz): I have no idea about NativeFieldWrapperClass2.
+// The closure takes a width (double), and returns the width/height as a list .
+typedef YogaTextLayoutClosure = Float64List Function(double);
+
+// See https://groups.google.com/forum/#!topic/flutter-dev/H0mcfMOMcjY for why NativeFieldWrapperClass2 is required.
 class YogaNode extends NativeFieldWrapperClass2 {
   // TODO(kaikaiz): should be final.
   int _nodeId;
@@ -405,61 +408,8 @@ class YogaNode extends NativeFieldWrapperClass2 {
   void _calculateLayout(double width, double height, int direction)
       native 'YogaNode_calculateLayout';
 
-  // Below is only for text node.
-  // TODO(kaikaiz): for now copy the behavior from text.dart - we have to find a better way to add text.
-
-  void startParagraphBuilder(ParagraphStyle style) => _startParagraphBuilder(
-      style._encoded,
-      style._fontFamily,
-      style._fontSize,
-      style._lineHeight,
-      style._ellipsis,
-      ParagraphBuilder._encodeLocale(style._locale));
-
-  void _startParagraphBuilder(
-      Int32List encoded,
-      String fontFamily,
-      double fontSize,
-      double lineHeight,
-      String ellipsis,
-      String locale) native 'YogaNode_startParagraphBuilder';
-
-  void pushTextStyle(TextStyle style) => _pushTextStyle(
-      style._encoded,
-      style._fontFamily,
-      style._fontSize,
-      style._letterSpacing,
-      style._wordSpacing,
-      style._height,
-      ParagraphBuilder._encodeLocale(style._locale),
-      style._background?._objects,
-      style._background?._data,
-      style._foreground?._objects,
-      style._foreground?._data);
-
-  void _pushTextStyle(
-      Int32List encoded,
-      String fontFamily,
-      double fontSize,
-      double letterSpacing,
-      double wordSpacing,
-      double height,
-      String locale,
-      List<dynamic> backgroundObjects,
-      ByteData backgroundData,
-      List<dynamic> foregroundObjects,
-      ByteData foregroundData) native 'YogaNode_pushTextStyle';
-
-  void popTextStyle() native 'YogaNode_popTextStyle';
-
-  void addText(String text) {
-    final String error = _addText(text);
-    if (error != null) throw ArgumentError(error);
-  }
-
-  String _addText(String text) native 'YogaNode_addText';
-
-  void endParagraphBuilder() native 'YogaNode_endParagraphBuilder';
+  // The C++ YogaNode is responsible for retaining and freeing the closure.
+  void setTextLayoutClosure(YogaTextLayoutClosure closure) native 'YogaNode_setTextLayoutClosure';
 
   // TODO(kaikaiz): below is only for debug.
 

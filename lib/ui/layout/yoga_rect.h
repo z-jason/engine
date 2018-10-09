@@ -27,11 +27,6 @@ struct DartConverter<blink::YogaRect> {
   static Dart_Handle ToDart(const blink::YogaRect &val);
 };
 
-template <>
-struct DartListFactory<blink::YogaRect> {
-  static Dart_Handle NewList(intptr_t length);
-};
-
 }  // namespace tonic
 
 #endif  // FLUTTER_LIB_UI_LAYOUT_YOGA_RECT_H_

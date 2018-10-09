@@ -2,9 +2,10 @@
 
 #include "flutter/lib/ui/layout/yoga_node.h"
 
-#include "flutter/fml/memory/ref_ptr.h"
+#include "third_party/tonic/converter/dart_converter.h"
 #include "third_party/tonic/dart_binding_macros.h"
 #include "third_party/tonic/dart_library_natives.h"
+#include "third_party/tonic/logging/dart_invoke.h"
 
 namespace blink {
 
@@ -40,8 +41,8 @@ STYLE_MASK(MaxWidth, 22);
 STYLE_MASK(MaxHeight, 23);
 STYLE_MASK(AspectRatio, 24);
 
-YGValue DecodeYGValue(tonic::Int32List &intList, tonic::Float64List &doubleList, int *intIndex, int *doubleIndex) {
-  return (YGValue){.value = (float)doubleList[(*doubleIndex)++], .unit = (YGUnit)intList[(*intIndex)++]};
+YGValue DecodeYGValue(const tonic::Int32List &intList, const tonic::Float64List &doubleList, int &intIndex, int &doubleIndex) {
+  return (YGValue){.value = (float)doubleList[doubleIndex++], .unit = (YGUnit)intList[intIndex++]};
 }
 
 }  // namespace
@@ -52,17 +53,13 @@ static void YogaNode_constructor(Dart_NativeArguments args) {
 
 IMPLEMENT_WRAPPERTYPEINFO(ui, YogaNode);
 
-#define FOR_EACH_BINDING(V)          \
-  V(YogaNode, nodeId)                \
-  V(YogaNode, rect)                  \
-  V(YogaNode, addChild)              \
-  V(YogaNode, calculateLayout)       \
-  V(YogaNode, startParagraphBuilder) \
-  V(YogaNode, pushTextStyle)         \
-  V(YogaNode, popTextStyle)          \
-  V(YogaNode, addText)               \
-  V(YogaNode, endParagraphBuilder)   \
-  V(YogaNode, printStyle)            \
+#define FOR_EACH_BINDING(V)         \
+  V(YogaNode, nodeId)               \
+  V(YogaNode, rect)                 \
+  V(YogaNode, addChild)             \
+  V(YogaNode, calculateLayout)      \
+  V(YogaNode, setTextLayoutClosure) \
+  V(YogaNode, printStyle)           \
   V(YogaNode, printLayout)
 
 FOR_EACH_BINDING(DART_NATIVE_CALLBACK)
@@ -73,17 +70,18 @@ void YogaNode::RegisterNatives(tonic::DartLibraryNatives *natives) {
        FOR_EACH_BINDING(DART_REGISTER_NATIVE)});
 }
 
-fml::RefPtr<YogaNode> YogaNode::Create(tonic::Int32List &intList, tonic::Float64List &doubleList) {
+fml::RefPtr<YogaNode> YogaNode::Create(const tonic::Int32List &intList, const tonic::Float64List &doubleList) {
   return fml::MakeRefCounted<YogaNode>(intList, doubleList);
 }
 
 YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-  Paragraph *paragraph = static_cast<Paragraph *>(YGNodeGetContext(node));
+  Dart_PersistentHandle textLayoutClosure = static_cast<Dart_PersistentHandle>(YGNodeGetContext(node));
   // TODO(kaikaiz): Yoga won't call this function with both *Exactly* modes. So anyway we'll have to do the layout.
-  paragraph->layout(width);
-  // TODO(kaikaiz): figure out why we cannot use paragraph->width().
-  float actualWidth = widthMode == YGMeasureModeExactly ? width : std::min(width, (float)paragraph->minIntrinsicWidth());
-  float actualHeight = heightMode == YGMeasureModeExactly ? height : std::min(height, (float)paragraph->height());
+  tonic::Float64List float64List(tonic::DartInvoke(textLayoutClosure, {tonic::ToDart(width)}));
+  float minWidth = float64List[0];
+  float computedHeight = float64List[1];
+  float actualWidth = widthMode == YGMeasureModeExactly ? width : std::min(width, minWidth);
+  float actualHeight = heightMode == YGMeasureModeExactly ? height : std::min(height, computedHeight);
   return (YGSize){.width = actualWidth, .height = actualHeight};
 }
 
@@ -99,39 +97,39 @@ YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMod
     YGNodeStyleSet##name(m_node, (float)doubleList[doubleIndex++]); \
   }
 
-#define EXTRACT_VALUE_STYLE(name)                                    \
-  if (mask & kStyle##name##Mask) {                                   \
-    YGValue value =                                                  \
-        DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex); \
-    switch (value.unit) {                                            \
-      case YGUnitPoint:                                              \
-        YGNodeStyleSet##name(m_node, value.value);                   \
-        break;                                                       \
-      case YGUnitPercent:                                            \
-        YGNodeStyleSet##name##Percent(m_node, value.value);          \
-        break;                                                       \
-      default:                                                       \
-        break;                                                       \
-    }                                                                \
+#define EXTRACT_VALUE_STYLE(name)                                  \
+  if (mask & kStyle##name##Mask) {                                 \
+    YGValue value =                                                \
+        DecodeYGValue(intList, doubleList, intIndex, doubleIndex); \
+    switch (value.unit) {                                          \
+      case YGUnitPoint:                                            \
+        YGNodeStyleSet##name(m_node, value.value);                 \
+        break;                                                     \
+      case YGUnitPercent:                                          \
+        YGNodeStyleSet##name##Percent(m_node, value.value);        \
+        break;                                                     \
+      default:                                                     \
+        break;                                                     \
+    }                                                              \
   }
 
-#define EXTRACT_VALUE_AUTO_STYLE(name)                               \
-  if (mask & kStyle##name##Mask) {                                   \
-    YGValue value =                                                  \
-        DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex); \
-    switch (value.unit) {                                            \
-      case YGUnitPoint:                                              \
-        YGNodeStyleSet##name(m_node, value.value);                   \
-        break;                                                       \
-      case YGUnitPercent:                                            \
-        YGNodeStyleSet##name##Percent(m_node, value.value);          \
-        break;                                                       \
-      case YGUnitAuto:                                               \
-        YGNodeStyleSet##name##Auto(m_node);                          \
-        break;                                                       \
-      default:                                                       \
-        break;                                                       \
-    }                                                                \
+#define EXTRACT_VALUE_AUTO_STYLE(name)                             \
+  if (mask & kStyle##name##Mask) {                                 \
+    YGValue value =                                                \
+        DecodeYGValue(intList, doubleList, intIndex, doubleIndex); \
+    switch (value.unit) {                                          \
+      case YGUnitPoint:                                            \
+        YGNodeStyleSet##name(m_node, value.value);                 \
+        break;                                                     \
+      case YGUnitPercent:                                          \
+        YGNodeStyleSet##name##Percent(m_node, value.value);        \
+        break;                                                     \
+      case YGUnitAuto:                                             \
+        YGNodeStyleSet##name##Auto(m_node);                        \
+        break;                                                     \
+      default:                                                     \
+        break;                                                     \
+    }                                                              \
   }
 
 #define EXTRACT_EDGE_VALUE_STYLE(name)                                     \
@@ -140,7 +138,7 @@ YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMod
     for (int i = 0; i < YGEdgeCount; ++i) {                                \
       if (edgeMask & (1 << i)) {                                           \
         YGValue value =                                                    \
-            DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex);   \
+            DecodeYGValue(intList, doubleList, intIndex, doubleIndex);     \
         switch (value.unit) {                                              \
           case YGUnitPoint:                                                \
             YGNodeStyleSet##name(m_node, (YGEdge)i, value.value);          \
@@ -171,7 +169,7 @@ YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMod
     for (int i = 0; i < YGEdgeCount; ++i) {                                \
       if (edgeMask & (1 << i)) {                                           \
         YGValue value =                                                    \
-            DecodeYGValue(intList, doubleList, &intIndex, &doubleIndex);   \
+            DecodeYGValue(intList, doubleList, intIndex, doubleIndex);     \
         switch (value.unit) {                                              \
           case YGUnitPoint:                                                \
             YGNodeStyleSet##name(m_node, (YGEdge)i, value.value);          \
@@ -189,7 +187,7 @@ YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMod
     }                                                                      \
   }
 
-YogaNode::YogaNode(tonic::Int32List &intList, tonic::Float64List &doubleList) {
+YogaNode::YogaNode(const tonic::Int32List &intList, const tonic::Float64List &doubleList) {
   m_node = YGNodeNew();
 
   int mask = intList[0];
@@ -223,7 +221,13 @@ YogaNode::YogaNode(tonic::Int32List &intList, tonic::Float64List &doubleList) {
   EXTRACT_FLOAT_STYLE(AspectRatio);
 }
 
-// TODO(kaikaiz): free the underlaying YGNodeRef?
-YogaNode::~YogaNode() = default;
+YogaNode::~YogaNode() {
+  Dart_PersistentHandle oldHandle = static_cast<Dart_PersistentHandle>(YGNodeGetContext(m_node));
+  if (oldHandle != nullptr) {
+    Dart_DeletePersistentHandle(oldHandle);
+  }
+  // Dart instances would be disposed recursively so no need to call YGNodeFreeRecursive.
+  YGNodeFree(m_node);
+}
 
 }  // namespace blink

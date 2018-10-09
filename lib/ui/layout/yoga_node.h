@@ -3,12 +3,8 @@
 #ifndef FLUTTER_LIB_UI_LAYOUT_YOGA_NODE_H_
 #define FLUTTER_LIB_UI_LAYOUT_YOGA_NODE_H_
 
-#include <vector>
-
 #include "flutter/lib/ui/dart_wrapper.h"
 #include "flutter/lib/ui/layout/yoga_rect.h"
-#include "flutter/lib/ui/text/paragraph.h"
-#include "flutter/lib/ui/text/paragraph_builder.h"
 #include "flutter/third_party/yoga/src/Yoga.h"
 #include "third_party/tonic/typed_data/float64_list.h"
 #include "third_party/tonic/typed_data/int32_list.h"
@@ -24,7 +20,7 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
   FML_FRIEND_MAKE_REF_COUNTED(YogaNode);
 
  public:
-  static fml::RefPtr<YogaNode> Create(tonic::Int32List &intList, tonic::Float64List &doubleList);
+  static fml::RefPtr<YogaNode> Create(const tonic::Int32List &intList, const tonic::Float64List &doubleList);
 
   ~YogaNode() override;
 
@@ -44,50 +40,19 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
     YGNodeCalculateLayout(m_node, width, height, (YGDirection)direction);
   }
 
-  // TODO(kaikaiz): for now, exactly as those in paragraph_builder.
-
-  void startParagraphBuilder(tonic::Int32List &encoded,
-                             const std::string &fontFamily,
-                             double fontSize,
-                             double lineHeight,
-                             const std::u16string &ellipsis,
-                             const std::string &locale) {
-    m_paragraphBuilder = ParagraphBuilder::create(encoded, fontFamily, fontSize, lineHeight, ellipsis, locale);
-  }
-  void pushTextStyle(tonic::Int32List& encoded,
-                     const std::string& fontFamily,
-                     double fontSize,
-                     double letterSpacing,
-                     double wordSpacing,
-                     double height,
-                     const std::string& locale,
-                     Dart_Handle background_objects,
-                     Dart_Handle background_data,
-                     Dart_Handle foreground_objects,
-                     Dart_Handle foreground_data) {
-    m_paragraphBuilder->pushStyle(encoded,
-                                  fontFamily,
-                                  fontSize,
-                                  letterSpacing,
-                                  wordSpacing,
-                                  height,
-                                  locale,
-                                  background_objects,
-                                  background_data,
-                                  foreground_objects,
-                                  foreground_data);
-  }
-  void popTextStyle() {
-    m_paragraphBuilder->pop();
-  }
-  Dart_Handle addText(const std::u16string &text) {
-    return m_paragraphBuilder->addText(text);
-  }
-  void endParagraphBuilder() {
-    // TODO(kaikaiz): memory management. Release the builder?
-    m_paragraph = m_paragraphBuilder->build();
-    YGNodeSetContext(m_node, m_paragraph.get());
-    YGNodeSetMeasureFunc(m_node, MeasureFunc);
+  void setTextLayoutClosure(Dart_Handle textLayoutClosure) {
+    Dart_PersistentHandle oldHandle = static_cast<Dart_PersistentHandle>(YGNodeGetContext(m_node));
+    if (oldHandle != nullptr) {
+      Dart_DeletePersistentHandle(oldHandle);
+    }
+    if (Dart_IsNull(textLayoutClosure)) {
+      YGNodeSetContext(m_node, nullptr);
+      YGNodeSetMeasureFunc(m_node, nullptr);
+    } else {
+      // Balanced here, or in the destructor.
+      YGNodeSetContext(m_node, Dart_NewPersistentHandle(textLayoutClosure));
+      YGNodeSetMeasureFunc(m_node, MeasureFunc);
+    }
   }
 
   // TODO(kaikaiz): only for debug.
@@ -109,9 +74,7 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
 
  private:
   YGNodeRef m_node;
-  fml::RefPtr<ParagraphBuilder> m_paragraphBuilder;
-  fml::RefPtr<Paragraph> m_paragraph;
-  explicit YogaNode(tonic::Int32List &intList, tonic::Float64List &doubleList);
+  explicit YogaNode(const tonic::Int32List &intList, const tonic::Float64List &doubleList);
 };
 
 }  // namespace blink

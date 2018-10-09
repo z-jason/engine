@@ -28,18 +28,13 @@ void DartConverter<YogaRect>::SetReturnValue(Dart_NativeArguments args, const Yo
 }
 
 Dart_Handle DartConverter<YogaRect>::ToDart(const YogaRect &val) {
-  constexpr int argc = 4;
-  Dart_Handle argv[argc] = {
+  Dart_Handle argv[4] = {
       tonic::ToDart(val.left),
       tonic::ToDart(val.top),
       tonic::ToDart(val.width),
       tonic::ToDart(val.height),
   };
-  return Dart_New(GetYogaRectType(), tonic::ToDart("_"), argc, argv);
-}
-
-Dart_Handle DartListFactory<YogaRect>::NewList(intptr_t length) {
-  return Dart_NewListOfType(GetYogaRectType(), length);
+  return Dart_New(GetYogaRectType(), tonic::ToDart("_"), 4, argv);
 }
 
 }  // namespace tonic

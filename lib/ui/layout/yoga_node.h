@@ -40,17 +40,17 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
     YGNodeCalculateLayout(m_node, width, height, (YGDirection)direction);
   }
 
-  void setTextLayoutClosure(Dart_Handle textLayoutClosure) {
+  void setLayoutClosure(Dart_Handle layoutClosure) {
     Dart_PersistentHandle oldHandle = static_cast<Dart_PersistentHandle>(YGNodeGetContext(m_node));
     if (oldHandle != nullptr) {
       Dart_DeletePersistentHandle(oldHandle);
     }
-    if (Dart_IsNull(textLayoutClosure)) {
+    if (Dart_IsNull(layoutClosure)) {
       YGNodeSetContext(m_node, nullptr);
       YGNodeSetMeasureFunc(m_node, nullptr);
     } else {
       // Balanced here, or in the destructor.
-      YGNodeSetContext(m_node, Dart_NewPersistentHandle(textLayoutClosure));
+      YGNodeSetContext(m_node, Dart_NewPersistentHandle(layoutClosure));
       YGNodeSetMeasureFunc(m_node, MeasureFunc);
     }
   }

@@ -366,8 +366,8 @@ class YogaRect {
       'YogaRect._(${left.toStringAsFixed(1)}, ${top.toStringAsFixed(1)}, ${width.toStringAsFixed(1)}, ${height.toStringAsFixed(1)})';
 }
 
-// The closure takes a width (double), and returns the width/height as a list .
-typedef YogaTextLayoutClosure = Float64List Function(double);
+// The closure takes four params: width, isWidthLoose, height, isHeightLoose. And it returns the width/height as a list.
+typedef YogaLayoutClosure = Float64List Function(double, bool, double, bool);
 
 // See https://groups.google.com/forum/#!topic/flutter-dev/H0mcfMOMcjY for why NativeFieldWrapperClass2 is required.
 class YogaNode extends NativeFieldWrapperClass2 {
@@ -375,7 +375,6 @@ class YogaNode extends NativeFieldWrapperClass2 {
   int _nodeId;
   YogaNode _owner;
   YogaNode get owner => _owner;
-  // TODO(kaikaiz): this var also keeps references to not lose the underlying C++ objects.
   // TODO(kaikaiz): should only expose getChild API.
   final List<YogaNode> children;
 
@@ -409,7 +408,7 @@ class YogaNode extends NativeFieldWrapperClass2 {
       native 'YogaNode_calculateLayout';
 
   // The C++ YogaNode is responsible for retaining and freeing the closure.
-  void setTextLayoutClosure(YogaTextLayoutClosure closure) native 'YogaNode_setTextLayoutClosure';
+  void setLayoutClosure(YogaLayoutClosure closure) native 'YogaNode_setLayoutClosure';
 
   // TODO(kaikaiz): below is only for debug.
 

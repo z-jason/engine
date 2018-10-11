@@ -53,21 +53,19 @@ static void YogaNode_constructor(Dart_NativeArguments args) {
 
 IMPLEMENT_WRAPPERTYPEINFO(ui, YogaNode);
 
-#define FOR_EACH_BINDING(V)         \
-  V(YogaNode, nodeId)               \
-  V(YogaNode, rect)                 \
-  V(YogaNode, addChild)             \
-  V(YogaNode, calculateLayout)      \
-  V(YogaNode, setTextLayoutClosure) \
-  V(YogaNode, printStyle)           \
+#define FOR_EACH_BINDING(V)     \
+  V(YogaNode, nodeId)           \
+  V(YogaNode, rect)             \
+  V(YogaNode, addChild)         \
+  V(YogaNode, calculateLayout)  \
+  V(YogaNode, setLayoutClosure) \
+  V(YogaNode, printStyle)       \
   V(YogaNode, printLayout)
 
 FOR_EACH_BINDING(DART_NATIVE_CALLBACK)
 
 void YogaNode::RegisterNatives(tonic::DartLibraryNatives *natives) {
-  natives->Register(
-      {{"YogaNode_constructor", YogaNode_constructor, 3, true},
-       FOR_EACH_BINDING(DART_REGISTER_NATIVE)});
+  natives->Register({{"YogaNode_constructor", YogaNode_constructor, 3, true}, FOR_EACH_BINDING(DART_REGISTER_NATIVE)});
 }
 
 fml::RefPtr<YogaNode> YogaNode::Create(const tonic::Int32List &intList, const tonic::Float64List &doubleList) {
@@ -75,14 +73,17 @@ fml::RefPtr<YogaNode> YogaNode::Create(const tonic::Int32List &intList, const to
 }
 
 YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-  Dart_PersistentHandle textLayoutClosure = static_cast<Dart_PersistentHandle>(YGNodeGetContext(node));
+  Dart_PersistentHandle layoutClosure = static_cast<Dart_PersistentHandle>(YGNodeGetContext(node));
   // TODO(kaikaiz): Yoga won't call this function with both *Exactly* modes. So anyway we'll have to do the layout.
-  tonic::Float64List float64List(tonic::DartInvoke(textLayoutClosure, {tonic::ToDart(width)}));
-  float minWidth = float64List[0];
-  float computedHeight = float64List[1];
-  float actualWidth = widthMode == YGMeasureModeExactly ? width : std::min(width, minWidth);
-  float actualHeight = heightMode == YGMeasureModeExactly ? height : std::min(height, computedHeight);
-  return (YGSize){.width = actualWidth, .height = actualHeight};
+  // YGMeasureModeUndefined is regarded as YGMeasureModeAtMost.
+  tonic::Float64List float64List(tonic::DartInvoke(
+      layoutClosure, {
+                         tonic::ToDart(width),
+                         tonic::ToDart(widthMode != YGMeasureModeExactly),
+                         tonic::ToDart(height),
+                         tonic::ToDart(heightMode != YGMeasureModeExactly),
+                     }));
+  return (YGSize){.width = (float)float64List[0], .height = (float)float64List[1]};
 }
 
 // TODO(kaikaiz): those macros are for personal convenience.

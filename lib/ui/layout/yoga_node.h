@@ -32,16 +32,17 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
     return YogaRect(YGNodeLayoutGetLeft(m_node), YGNodeLayoutGetTop(m_node), YGNodeLayoutGetWidth(m_node), YGNodeLayoutGetHeight(m_node));
   }
 
-  void addChild(intptr_t childNodeId) {
-    YGNodeInsertChild(m_node, reinterpret_cast<YGNodeRef>(childNodeId), YGNodeGetChildCount(m_node));
+  void insertChild(intptr_t childNodeId, uint32_t index) {
+    YGNodeInsertChild(m_node, reinterpret_cast<YGNodeRef>(childNodeId), index);
   }
 
-  void calculateLayout(double width, double height, int direction) {
+  YogaRect calculateLayout(double width, double height, int direction) {
     YGNodeCalculateLayout(m_node, width, height, (YGDirection)direction);
+    return rect();
   }
 
-  void setLayoutClosure(Dart_Handle layoutClosure) {
-    Dart_PersistentHandle oldHandle = static_cast<Dart_PersistentHandle>(YGNodeGetContext(m_node));
+  void attachLayoutClosure(Dart_Handle layoutClosure) {
+    Dart_PersistentHandle oldHandle = reinterpret_cast<Dart_PersistentHandle>(YGNodeGetContext(m_node));
     if (oldHandle != nullptr) {
       Dart_DeletePersistentHandle(oldHandle);
     }

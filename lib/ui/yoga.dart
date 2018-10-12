@@ -74,13 +74,13 @@ enum YogaWrap {
 }
 
 class YogaValue {
-  final double value;
-  final YogaUnit unit;
-
-  // TODO(kaikaiz): add assertions for double
+  // TODO(kaikaiz): add assertions/clamps for double.
   const YogaValue(this.value, this.unit);
   const YogaValue.point(double value) : this(value, YogaUnit.point);
   const YogaValue.percent(double value) : this(value, YogaUnit.percent);
+
+  final double value;
+  final YogaUnit unit;
 
   // This is YGValueAuto.
   // static final YogaValue auto = const YogaValue(0.0, YogaUnit.auto);
@@ -96,16 +96,6 @@ class YogaValue {
 
 /// TODO(kaikaiz): there is no resolving logic - we simply pass it to Yoga.
 class YogaEdgeInsets {
-  YogaValue left;
-  YogaValue top;
-  YogaValue right;
-  YogaValue bottom;
-  YogaValue start;
-  YogaValue end;
-  YogaValue horizontal;
-  YogaValue vertical;
-  YogaValue all;
-
   YogaEdgeInsets({
     this.left,
     this.top,
@@ -117,6 +107,16 @@ class YogaEdgeInsets {
     this.vertical,
     this.all,
   });
+
+  YogaValue left;
+  YogaValue top;
+  YogaValue right;
+  YogaValue bottom;
+  YogaValue start;
+  YogaValue end;
+  YogaValue horizontal;
+  YogaValue vertical;
+  YogaValue all;
 
   /** static final YogaEdgeInsets undefined = YogaEdgeInsets(
       YogaValue.undefined,
@@ -174,32 +174,6 @@ class YogaEdgeInsets {
 }
 
 class YogaStyle {
-  YogaDirection direction;
-  YogaFlexDirection flexDirection;
-  YogaJustify justifyContent;
-  YogaAlign alignContent;
-  YogaAlign alignItems;
-  YogaAlign alignSelf;
-  YogaPositionType positionType;
-  YogaWrap flexWrap;
-  YogaOverflow overflow;
-  YogaDisplay display;
-  double flex;
-  double flexGrow;
-  double flexShrink;
-  YogaValue flexBasis;
-  YogaEdgeInsets margin;
-  YogaEdgeInsets position;
-  YogaEdgeInsets padding;
-  YogaEdgeInsets border;
-  YogaValue width;
-  YogaValue height;
-  YogaValue minWidth;
-  YogaValue minHeight;
-  YogaValue maxWidth;
-  YogaValue maxHeight;
-  double aspectRatio;
-
   // TODO(kaikaiz): find way to map double.nan to YGFloatOptional
   YogaStyle({
     this.direction, // YogaDirection.inherit
@@ -228,6 +202,32 @@ class YogaStyle {
     this.maxHeight, // YogaValue.undefined
     this.aspectRatio, // double.nan
   });
+
+  YogaDirection direction;
+  YogaFlexDirection flexDirection;
+  YogaJustify justifyContent;
+  YogaAlign alignContent;
+  YogaAlign alignItems;
+  YogaAlign alignSelf;
+  YogaPositionType positionType;
+  YogaWrap flexWrap;
+  YogaOverflow overflow;
+  YogaDisplay display;
+  double flex;
+  double flexGrow;
+  double flexShrink;
+  YogaValue flexBasis;
+  YogaEdgeInsets margin;
+  YogaEdgeInsets position;
+  YogaEdgeInsets padding;
+  YogaEdgeInsets border;
+  YogaValue width;
+  YogaValue height;
+  YogaValue minWidth;
+  YogaValue minHeight;
+  YogaValue maxWidth;
+  YogaValue maxHeight;
+  double aspectRatio;
 
   // TODO(kaikaiz): override operator==, hashCode and toString.
 
@@ -339,13 +339,13 @@ class YogaStyle {
 }
 
 class YogaRect {
+  // Created by engine, not available externally.
+  const YogaRect._(this.left, this.top, this.width, this.height);
+
   final double left;
   final double top;
   final double width;
   final double height;
-
-  // Created by engine, not available externally.
-  const YogaRect._(this.left, this.top, this.width, this.height);
 
   @override
   bool operator ==(dynamic other) {
@@ -371,44 +371,61 @@ typedef YogaLayoutClosure = Float64List Function(double, bool, double, bool);
 
 // See https://groups.google.com/forum/#!topic/flutter-dev/H0mcfMOMcjY for why NativeFieldWrapperClass2 is required.
 class YogaNode extends NativeFieldWrapperClass2 {
-  // TODO(kaikaiz): should be final.
-  int _nodeId;
-  YogaNode _owner;
-  YogaNode get owner => _owner;
-  // TODO(kaikaiz): should only expose getChild API.
-  final List<YogaNode> children;
-
-  YogaNode(YogaStyle style) : children = List() {
-    List<int> intList = List();
-    List<double> doubleList = List();
+  YogaNode(YogaStyle style) {
+    List<int> intList = [];
+    List<double> doubleList = [];
     style._encode(intList, doubleList);
     _constructor(Int32List.fromList(intList), Float64List.fromList(doubleList));
     _nodeId = _retrieveNodeId();
+    _children = [];
   }
+
+  int _nodeId;
+  List<YogaNode> _children;
+
+  void insertChild(YogaNode child, {YogaNode before}) {
+    if (before != null) {
+      int index = _children.indexOf(before);
+      _insertChild(child._nodeId, index);
+      _children.insert(index, child);
+    } else {
+      _insertChild(child._nodeId, _children.length);
+      _children.add(child);
+    }
+  }
+
+  // TODO(kaikaiz): not sure about how double.infinity is translated into C native double.
+  // This value is defined inside Yoga C++ impl.
+  double _clamp(double x) => x.isFinite ? x : 10e20;
+
+  YogaRect calculateLayout({
+    double width = double.infinity,
+    double height = double.infinity,
+    YogaDirection direction = YogaDirection.ltr,
+  }) =>
+      _calculateLayout(_clamp(width), _clamp(height), direction.index);
+
+  // ======= Below are C++ natives =======
+
+  // Only valid after calling calculateLayout on the root node.
+  YogaRect get rect native 'YogaNode_rect';
+
+  // It is the user's responsbility to pass a null/meaningful value to
+  // remove/add the closure before/after inserting/removing children.
+  //
+  // The C++ YogaNode is responsible for retaining and freeing the closure.
+  void attachLayoutClosure(YogaLayoutClosure closure)
+      native 'YogaNode_attachLayoutClosure';
 
   void _constructor(Int32List intList, Float64List doubleList)
       native 'YogaNode_constructor';
 
   int _retrieveNodeId() native 'YogaNode_nodeId';
 
-  YogaRect get rect native 'YogaNode_rect';
+  void _insertChild(int childNodeId, int index) native 'YogaNode_insertChild';
 
-  void addChild(YogaNode child) {
-    children.add(child);
-    child._owner = this;
-    _addChild(child._nodeId);
-  }
-
-  void _addChild(int childNodeId) native 'YogaNode_addChild';
-
-  void calculateLayout(double width, double height, YogaDirection direction) =>
-      _calculateLayout(width, height, direction.index);
-
-  void _calculateLayout(double width, double height, int direction)
+  YogaRect _calculateLayout(double width, double height, int direction)
       native 'YogaNode_calculateLayout';
-
-  // The C++ YogaNode is responsible for retaining and freeing the closure.
-  void setLayoutClosure(YogaLayoutClosure closure) native 'YogaNode_setLayoutClosure';
 
   // TODO(kaikaiz): below is only for debug.
 

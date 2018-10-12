@@ -53,13 +53,13 @@ static void YogaNode_constructor(Dart_NativeArguments args) {
 
 IMPLEMENT_WRAPPERTYPEINFO(ui, YogaNode);
 
-#define FOR_EACH_BINDING(V)     \
-  V(YogaNode, nodeId)           \
-  V(YogaNode, rect)             \
-  V(YogaNode, addChild)         \
-  V(YogaNode, calculateLayout)  \
-  V(YogaNode, setLayoutClosure) \
-  V(YogaNode, printStyle)       \
+#define FOR_EACH_BINDING(V)        \
+  V(YogaNode, nodeId)              \
+  V(YogaNode, rect)                \
+  V(YogaNode, insertChild)         \
+  V(YogaNode, calculateLayout)     \
+  V(YogaNode, attachLayoutClosure) \
+  V(YogaNode, printStyle)          \
   V(YogaNode, printLayout)
 
 FOR_EACH_BINDING(DART_NATIVE_CALLBACK)
@@ -73,7 +73,7 @@ fml::RefPtr<YogaNode> YogaNode::Create(const tonic::Int32List &intList, const to
 }
 
 YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-  Dart_PersistentHandle layoutClosure = static_cast<Dart_PersistentHandle>(YGNodeGetContext(node));
+  Dart_PersistentHandle layoutClosure = reinterpret_cast<Dart_PersistentHandle>(YGNodeGetContext(node));
   // TODO(kaikaiz): Yoga won't call this function with both *Exactly* modes. So anyway we'll have to do the layout.
   // YGMeasureModeUndefined is regarded as YGMeasureModeAtMost.
   tonic::Float64List float64List(tonic::DartInvoke(
@@ -223,7 +223,7 @@ YogaNode::YogaNode(const tonic::Int32List &intList, const tonic::Float64List &do
 }
 
 YogaNode::~YogaNode() {
-  Dart_PersistentHandle oldHandle = static_cast<Dart_PersistentHandle>(YGNodeGetContext(m_node));
+  Dart_PersistentHandle oldHandle = reinterpret_cast<Dart_PersistentHandle>(YGNodeGetContext(m_node));
   if (oldHandle != nullptr) {
     Dart_DeletePersistentHandle(oldHandle);
   }

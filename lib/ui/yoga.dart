@@ -340,6 +340,7 @@ class YogaStyle {
 
 class YogaRect {
   // Created by engine, not available externally.
+  @pragma('vm:entry-point')
   const YogaRect._(this.left, this.top, this.width, this.height);
 
   final double left;

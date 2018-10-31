@@ -83,14 +83,34 @@ class YogaValue {
   final YogaUnit unit;
 
   // This is YGValueAuto.
-  // static final YogaValue auto = const YogaValue(0.0, YogaUnit.auto);
+  static final YogaValue auto = const YogaValue(0.0, YogaUnit.auto);
 
-  // This is YGValueUndefined.
-  // static final YogaValue undefined = const YogaValue(0.0, YogaUnit.undefined);
+  // This is YGValueUndefined. Not to be used - just for a comment.
+  static final YogaValue undefined = const YogaValue(0.0, YogaUnit.undefined);
 
   void _encode(List<int> intList, List<double> doubleList) {
     doubleList.add(value);
     intList.add(unit.index);
+  }
+
+  @override
+  bool operator ==(dynamic other) {
+    if (identical(this, other)) return true;
+    if (other.runtimeType != runtimeType) return false;
+    YogaValue typedOther = other;
+    return typedOther.value == value && typedOther.unit == unit;
+  }
+
+  @override
+  int get hashCode => hashValues(value, unit);
+
+  @override
+  String toString() {
+    if (unit == YogaUnit.point)
+      return 'YogaValue.point(${value.toStringAsFixed(1)})';
+    if (unit == YogaUnit.percent)
+      return 'YogaValue.percent(${value.toStringAsFixed(1)})';
+    return 'YogaValue(${value.toStringAsFixed(1)}, $unit)';
   }
 }
 
@@ -108,26 +128,15 @@ class YogaEdgeInsets {
     this.all,
   });
 
-  YogaValue left;
-  YogaValue top;
-  YogaValue right;
-  YogaValue bottom;
-  YogaValue start;
-  YogaValue end;
-  YogaValue horizontal;
-  YogaValue vertical;
-  YogaValue all;
-
-  /** static final YogaEdgeInsets undefined = YogaEdgeInsets(
-      YogaValue.undefined,
-      YogaValue.undefined,
-      YogaValue.undefined,
-      YogaValue.undefined,
-      YogaValue.undefined,
-      YogaValue.undefined,
-      YogaValue.undefined,
-      YogaValue.undefined,
-      YogaValue.undefined); */
+  final YogaValue left;
+  final YogaValue top;
+  final YogaValue right;
+  final YogaValue bottom;
+  final YogaValue start;
+  final YogaValue end;
+  final YogaValue horizontal;
+  final YogaValue vertical;
+  final YogaValue all;
 
   // TODO(kaikaiz): override operator==, hashCode and toString.
 
@@ -171,10 +180,46 @@ class YogaEdgeInsets {
       all._encode(intList, doubleList);
     }
   }
+
+  @override
+  bool operator ==(dynamic other) {
+    if (identical(this, other)) return true;
+    if (other.runtimeType != runtimeType) return false;
+    YogaEdgeInsets typedOther = other;
+    return typedOther.left == left &&
+        typedOther.top == top &&
+        typedOther.right == right &&
+        typedOther.bottom == bottom &&
+        typedOther.start == start &&
+        typedOther.end == end &&
+        typedOther.horizontal == horizontal &&
+        typedOther.vertical == vertical &&
+        typedOther.all == all;
+  }
+
+  @override
+  int get hashCode => hashValues(
+      left, top, right, bottom, start, end, horizontal, vertical, all);
+
+  @override
+  String toString() {
+    String val = '';
+    if (left != null) val += 'left: $left,';
+    if (top != null) val += 'top: $top,';
+    if (right != null) val += 'right: $right,';
+    if (bottom != null) val += 'bottom: $bottom,';
+    if (start != null) val += 'start: $start,';
+    if (end != null) val += 'end: $end,';
+    if (horizontal != null) val += 'horizontal: $horizontal,';
+    if (vertical != null) val += 'vertical: $vertical,';
+    if (all != null) val += 'all: $all,';
+    return 'YogaEdgeInsets($val)';
+  }
 }
 
 class YogaStyle {
-  // TODO(kaikaiz): find way to map double.nan to YGFloatOptional
+  // TODO(kaikaiz): find way to map double.nan to YGFloatOptional.
+  // TODO(kaikaiz): add assertions for double.
   YogaStyle({
     this.direction, // YogaDirection.inherit
     this.flexDirection, // YogaFlexDirection.column
@@ -203,35 +248,33 @@ class YogaStyle {
     this.aspectRatio, // double.nan
   });
 
-  YogaDirection direction;
-  YogaFlexDirection flexDirection;
-  YogaJustify justifyContent;
-  YogaAlign alignContent;
-  YogaAlign alignItems;
-  YogaAlign alignSelf;
-  YogaPositionType positionType;
-  YogaWrap flexWrap;
-  YogaOverflow overflow;
-  YogaDisplay display;
-  double flex;
-  double flexGrow;
-  double flexShrink;
-  YogaValue flexBasis;
-  YogaEdgeInsets margin;
-  YogaEdgeInsets position;
-  YogaEdgeInsets padding;
-  YogaEdgeInsets border;
-  YogaValue width;
-  YogaValue height;
-  YogaValue minWidth;
-  YogaValue minHeight;
-  YogaValue maxWidth;
-  YogaValue maxHeight;
-  double aspectRatio;
+  final YogaDirection direction;
+  final YogaFlexDirection flexDirection;
+  final YogaJustify justifyContent;
+  final YogaAlign alignContent;
+  final YogaAlign alignItems;
+  final YogaAlign alignSelf;
+  final YogaPositionType positionType;
+  final YogaWrap flexWrap;
+  final YogaOverflow overflow;
+  final YogaDisplay display;
+  final double flex;
+  final double flexGrow;
+  final double flexShrink;
+  final YogaValue flexBasis;
+  final YogaEdgeInsets margin;
+  final YogaEdgeInsets position;
+  final YogaEdgeInsets padding;
+  final YogaEdgeInsets border;
+  final YogaValue width;
+  final YogaValue height;
+  final YogaValue minWidth;
+  final YogaValue minHeight;
+  final YogaValue maxWidth;
+  final YogaValue maxHeight;
+  final double aspectRatio;
 
-  // TODO(kaikaiz): override operator==, hashCode and toString.
-
-  // TODO(kaikaiz): Encoding should match those in C++, and seriously, we should use WhateverBuffers...
+  // Encoding should match those in C++.
   void _encode(List<int> intList, List<double> doubleList) {
     int maskIndex = intList.length;
     intList.add(0);
@@ -336,6 +379,73 @@ class YogaStyle {
       doubleList.add(aspectRatio);
     }
   }
+
+  @override
+  bool operator ==(dynamic other) {
+    if (identical(this, other)) return true;
+    if (other.runtimeType != runtimeType) return false;
+    YogaStyle typedOther = other;
+    return typedOther.direction == direction &&
+        typedOther.flexDirection == flexDirection &&
+        typedOther.justifyContent == justifyContent &&
+        typedOther.alignContent == alignContent &&
+        typedOther.alignItems == alignItems &&
+        typedOther.alignSelf == alignSelf &&
+        typedOther.positionType == positionType &&
+        typedOther.flexWrap == flexWrap &&
+        typedOther.overflow == overflow &&
+        typedOther.display == display &&
+        typedOther.flex == flex &&
+        typedOther.flexGrow == flexGrow &&
+        typedOther.flexShrink == flexShrink &&
+        typedOther.flexBasis == flexBasis &&
+        typedOther.margin == margin &&
+        typedOther.position == position &&
+        typedOther.padding == padding &&
+        typedOther.border == border &&
+        typedOther.width == width &&
+        typedOther.height == height &&
+        typedOther.minWidth == minWidth &&
+        typedOther.minHeight == minHeight &&
+        typedOther.maxWidth == maxWidth &&
+        typedOther.maxHeight == maxHeight &&
+        typedOther.aspectRatio == aspectRatio;
+  }
+
+  // TODO(kaikaiz): https://github.com/flutter/flutter/issues/1356
+  // @override
+  // int get hashCode => hashValues(direction, flexDirection, justifyContent, alignContent, alignItems, alignSelf, positionType, flexWrap, overflow, display, flex, flexGrow, flexShrink, flexBasis, margin, position, padding, border, width, height, minWidth, minHeight, maxWidth, maxHeight, aspectRatio);
+
+  @override
+  String toString() {
+    String val = '';
+    if (direction != null) val += 'direction: $direction,';
+    if (flexDirection != null) val += 'flexDirection: $flexDirection,';
+    if (justifyContent != null) val += 'justifyContent: $justifyContent,';
+    if (alignContent != null) val += 'alignContent: $alignContent,';
+    if (alignItems != null) val += 'alignItems: $alignItems,';
+    if (alignSelf != null) val += 'alignSelf: $alignSelf,';
+    if (positionType != null) val += 'positionType: $positionType,';
+    if (flexWrap != null) val += 'flexWrap: $flexWrap,';
+    if (overflow != null) val += 'overflow: $overflow,';
+    if (display != null) val += 'display: $display,';
+    if (flex != null) val += 'flex: ${flex.toStringAsFixed(1)},';
+    if (flexGrow != null) val += 'flexGrow: ${flexGrow.toStringAsFixed(1)},';
+    if (flexShrink != null) val += 'flexShrink: ${flexShrink.toStringAsFixed(1)},';
+    if (flexBasis != null) val += 'flexBasis: $flexBasis,';
+    if (margin != null) val += 'margin: $margin,';
+    if (position != null) val += 'position: $position,';
+    if (padding != null) val += 'padding: $padding,';
+    if (border != null) val += 'border: $border,';
+    if (width != null) val += 'width: $width,';
+    if (height != null) val += 'height: $height,';
+    if (minWidth != null) val += 'minWidth: $minWidth,';
+    if (minHeight != null) val += 'minHeight: $minHeight,';
+    if (maxWidth != null) val += 'maxWidth: $maxWidth,';
+    if (maxHeight != null) val += 'maxHeight: $maxHeight,';
+    if (aspectRatio != null) val += 'aspectRatio: ${aspectRatio.toStringAsFixed(1)},';
+    return 'YogaStyle($val)';
+  }
 }
 
 class YogaRect {
@@ -367,10 +477,10 @@ class YogaRect {
       'YogaRect._(${left.toStringAsFixed(1)}, ${top.toStringAsFixed(1)}, ${width.toStringAsFixed(1)}, ${height.toStringAsFixed(1)})';
 }
 
-// The closure takes four params: width, isWidthLoose, height, isHeightLoose. And it returns the width/height as a list.
+/// The closure takes four params: width, isWidthLoose, height, isHeightLoose. And it returns the width/height as a list.
 typedef YogaLayoutClosure = Float64List Function(double, bool, double, bool);
 
-// See https://groups.google.com/forum/#!topic/flutter-dev/H0mcfMOMcjY for why NativeFieldWrapperClass2 is required.
+/// See https://groups.google.com/forum/#!topic/flutter-dev/H0mcfMOMcjY for why NativeFieldWrapperClass2 is required.
 class YogaNode extends NativeFieldWrapperClass2 {
   YogaNode(YogaStyle style) {
     List<int> intList = [];
@@ -421,6 +531,7 @@ class YogaNode extends NativeFieldWrapperClass2 {
   void _constructor(Int32List intList, Float64List doubleList)
       native 'YogaNode_constructor';
 
+  // Should only be called once inside the constructor. Won't change during the lifetime of the object.
   int _retrieveNodeId() native 'YogaNode_nodeId';
 
   void _insertChild(int childNodeId, int index) native 'YogaNode_insertChild';

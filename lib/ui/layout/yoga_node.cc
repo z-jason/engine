@@ -74,8 +74,8 @@ fml::RefPtr<YogaNode> YogaNode::Create(const tonic::Int32List &intList, const to
 
 YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
   Dart_PersistentHandle layoutClosure = reinterpret_cast<Dart_PersistentHandle>(YGNodeGetContext(node));
-  // TODO(kaikaiz): Yoga won't call this function with both *Exactly* modes. So anyway we'll have to do the layout.
-  // YGMeasureModeUndefined is regarded as YGMeasureModeAtMost.
+  // Yoga won't call this function with both *Exactly* modes. So anyway we'll have to do the layout.
+  // TODO(kaikaiz): YGMeasureModeUndefined is regarded as YGMeasureModeAtMost for now, but should be unbounded according to Yoga documentation.
   tonic::Float64List float64List(tonic::DartInvoke(
       layoutClosure, {
                          tonic::ToDart(width),

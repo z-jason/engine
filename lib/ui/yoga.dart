@@ -219,6 +219,7 @@ class YogaEdgeInsets {
 class YogaStyle {
   // TODO(kaikaiz): find way to map double.nan to YGFloatOptional.
   // TODO(kaikaiz): add assertions for double.
+  // The comments are the default values in C++ side. Some fields have different default values for convenience, such as flexGrow and flexShrink.
   YogaStyle({
     this.direction, // YogaDirection.inherit
     this.flexDirection, // YogaFlexDirection.column
@@ -231,8 +232,8 @@ class YogaStyle {
     this.overflow, // YogaOverflow.visible
     this.display, // YogaDisplay.flex
     this.flex, // double.nan
-    this.flexGrow, // double.nan
-    this.flexShrink, // double.nan
+    this.flexGrow = 0.0, // double.nan
+    this.flexShrink = 1.0, // double.nan
     this.flexBasis, // YogaValue.auto
     this.margin, // YogaEdgeInsets.undefined
     this.position, // YogaEdgeInsets.undefined

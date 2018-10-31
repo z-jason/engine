@@ -75,8 +75,7 @@ enum YogaWrap {
 
 class YogaValue {
   // TODO(kaikaiz): add assertions/clamps for double.
-  const YogaValue(this.value, this.unit);
-  const YogaValue.point(double value) : this(value, YogaUnit.point);
+  const YogaValue(this.value, [this.unit = YogaUnit.point]);
   const YogaValue.percent(double value) : this(value, YogaUnit.percent);
 
   final double value;

@@ -97,6 +97,10 @@ class YogaValue {
     if (identical(this, other)) return true;
     if (other.runtimeType != runtimeType) return false;
     YogaValue typedOther = other;
+    if (typedOther.unit == YogaUnit.undefined && unit == YogaUnit.undefined ||
+        typedOther.unit == YogaUnit.auto && unit == YogaUnit.auto) {
+      return true;
+    }
     return typedOther.value == value && typedOther.unit == unit;
   }
 
@@ -106,7 +110,7 @@ class YogaValue {
   @override
   String toString() {
     if (unit == YogaUnit.point)
-      return 'YogaValue.point(${value.toStringAsFixed(1)})';
+      return 'YogaValue(${value.toStringAsFixed(1)})';
     if (unit == YogaUnit.percent)
       return 'YogaValue.percent(${value.toStringAsFixed(1)})';
     return 'YogaValue(${value.toStringAsFixed(1)}, $unit)';

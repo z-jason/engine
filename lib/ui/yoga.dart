@@ -498,26 +498,18 @@ class YogaNode extends NativeFieldWrapperClass2 {
   int _nodeId;
   List<YogaNode> _children;
 
-  void insertChild(YogaNode child, {YogaNode before}) {
-    if (before != null) {
-      int index = _children.indexOf(before);
-      _insertChild(child._nodeId, index);
-      _children.insert(index, child);
-    } else {
-      _insertChild(child._nodeId, _children.length);
-      _children.add(child);
-    }
+  void insertChild(YogaNode child, YogaNode after) {
+    int index = after == null ? 0 : _children.indexOf(after) + 1;
+    _insertChild(child._nodeId, index);
+    _children.insert(index, child);
   }
 
   // TODO(kaikaiz): not sure about how double.infinity is translated into C native double.
   // This value is defined inside Yoga C++ impl.
   double _clamp(double x) => x.isFinite ? x : 10e20;
 
-  YogaRect calculateLayout({
-    double width = double.infinity,
-    double height = double.infinity,
-    YogaDirection direction = YogaDirection.ltr,
-  }) =>
+  YogaRect calculateLayout(double width, double height,
+      YogaDirection direction) =>
       _calculateLayout(_clamp(width), _clamp(height), direction.index);
 
   // ======= Below are C++ natives =======

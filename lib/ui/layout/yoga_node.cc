@@ -54,11 +54,14 @@ static void YogaNode_constructor(Dart_NativeArguments args) {
 IMPLEMENT_WRAPPERTYPEINFO(ui, YogaNode);
 
 #define FOR_EACH_BINDING(V)        \
-  V(YogaNode, nodeId)              \
+  V(YogaNode, retrieveNodeId)      \
   V(YogaNode, rect)                \
   V(YogaNode, insertChild)         \
+  V(YogaNode, removeChild)         \
+  V(YogaNode, removeAllChildren)   \
   V(YogaNode, calculateLayout)     \
   V(YogaNode, attachLayoutClosure) \
+  V(YogaNode, markDirty)           \
   V(YogaNode, printStyle)          \
   V(YogaNode, printLayout)
 

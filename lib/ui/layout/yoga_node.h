@@ -24,7 +24,7 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
 
   ~YogaNode() override;
 
-  intptr_t nodeId() {
+  intptr_t retrieveNodeId() {
     return reinterpret_cast<intptr_t>(m_node);
   }
 
@@ -32,8 +32,21 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
     return YogaRect(YGNodeLayoutGetLeft(m_node), YGNodeLayoutGetTop(m_node), YGNodeLayoutGetWidth(m_node), YGNodeLayoutGetHeight(m_node));
   }
 
-  void insertChild(intptr_t childNodeId, uint32_t index) {
-    YGNodeInsertChild(m_node, reinterpret_cast<YGNodeRef>(childNodeId), index);
+  void insertChild(intptr_t nodeId, intptr_t afterNodeId) {
+    YGNodeRef after = reinterpret_cast<YGNodeRef>(afterNodeId);
+    uint32_t index = 0;
+    if (after != nullptr) {
+      while (YGNodeGetChild(m_node, index++) != after);
+    }
+    YGNodeInsertChild(m_node, reinterpret_cast<YGNodeRef>(nodeId), index);
+  }
+
+  void removeChild(intptr_t nodeId) {
+    YGNodeRemoveChild(m_node, reinterpret_cast<YGNodeRef>(nodeId));
+  }
+
+  void removeAllChildren() {
+    YGNodeRemoveAllChildren(m_node);
   }
 
   YogaRect calculateLayout(double width, double height, int direction) {
@@ -54,6 +67,10 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
       YGNodeSetContext(m_node, Dart_NewPersistentHandle(layoutClosure));
       YGNodeSetMeasureFunc(m_node, MeasureFunc);
     }
+  }
+
+  void markDirty() {
+    YGNodeMarkDirty(m_node);
   }
 
   // TODO(kaikaiz): only for debug.

@@ -191,9 +191,7 @@ YGSize YogaNode::MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMod
     }                                                                      \
   }
 
-YogaNode::YogaNode(const tonic::Int32List &intList, const tonic::Float64List &doubleList) {
-  m_node = YGNodeNew();
-
+void YogaNode::updateStyle(const tonic::Int32List &intList, const tonic::Float64List &doubleList) {
   int mask = intList[0];
   int intIndex = 1;
   int doubleIndex = 0;
@@ -223,6 +221,11 @@ YogaNode::YogaNode(const tonic::Int32List &intList, const tonic::Float64List &do
   EXTRACT_VALUE_STYLE(MaxWidth);
   EXTRACT_VALUE_STYLE(MaxHeight);
   EXTRACT_FLOAT_STYLE(AspectRatio);
+}
+
+YogaNode::YogaNode(const tonic::Int32List &intList, const tonic::Float64List &doubleList) {
+  m_node = YGNodeNew();
+  YogaNode::updateStyle(intList, doubleList);
 }
 
 YogaNode::~YogaNode() {

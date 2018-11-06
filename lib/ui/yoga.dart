@@ -487,11 +487,17 @@ typedef YogaLayoutClosure = Float64List Function(double, bool, double, bool);
 /// See https://groups.google.com/forum/#!topic/flutter-dev/H0mcfMOMcjY for why NativeFieldWrapperClass2 is required.
 class YogaNode extends NativeFieldWrapperClass2 {
   YogaNode(YogaStyle style) {
+    _callFunctionWithStyle(style, _constructor);
+    _nodeId = _retrieveNodeId();
+  }
+
+  void updateStyle(YogaStyle newStyle) => _callFunctionWithStyle(newStyle, _updateStyle);
+
+  void _callFunctionWithStyle(YogaStyle style, void Function(Int32List, Float64List) function) {
     List<int> intList = [];
     List<double> doubleList = [];
     style._encode(intList, doubleList);
-    _constructor(Int32List.fromList(intList), Float64List.fromList(doubleList));
-    _nodeId = _retrieveNodeId();
+    function(Int32List.fromList(intList), Float64List.fromList(doubleList));
   }
 
   int _nodeId;
@@ -504,7 +510,8 @@ class YogaNode extends NativeFieldWrapperClass2 {
   // This value is defined inside Yoga C++ impl.
   double _clamp(double x) => x.isFinite ? x : 10e20;
 
-  YogaRect calculateLayout(double width, double height, YogaDirection direction) => _calculateLayout(_clamp(width), _clamp(height), direction.index);
+  YogaRect calculateLayout(double minWidth, double minHeight, double maxWidth, double maxHeight, YogaDirection direction) =>
+      _calculateLayout(_clamp(minWidth), _clamp(minHeight), _clamp(maxWidth), _clamp(maxHeight), direction.index);
 
   // ======= Below are C++ natives =======
 
@@ -521,6 +528,8 @@ class YogaNode extends NativeFieldWrapperClass2 {
 
   void markDirty() native 'YogaNode_markDirty';
 
+  void _updateStyle(Int32List intList, Float64List doubleList) native 'YogaNode_updateStyle';
+
   void _constructor(Int32List intList, Float64List doubleList) native 'YogaNode_constructor';
 
   // Should only be called once inside the constructor. Won't change during the lifetime of the object.
@@ -530,7 +539,7 @@ class YogaNode extends NativeFieldWrapperClass2 {
 
   void _removeChild(int nodeId) native 'Yoga_removeChild';
 
-  YogaRect _calculateLayout(double width, double height, int direction) native 'YogaNode_calculateLayout';
+  YogaRect _calculateLayout(double minWidth, double minHeight, double maxWidth, double maxHeight, int direction) native 'YogaNode_calculateLayout';
 
   // TODO(kaikaiz): below is only for debug.
 

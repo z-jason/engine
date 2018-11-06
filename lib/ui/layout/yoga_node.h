@@ -21,6 +21,7 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
 
  public:
   static fml::RefPtr<YogaNode> Create(const tonic::Int32List &intList, const tonic::Float64List &doubleList);
+  void updateStyle(const tonic::Int32List &intList, const tonic::Float64List &doubleList);
 
   ~YogaNode() override;
 
@@ -49,8 +50,11 @@ class YogaNode : public RefCountedDartWrappable<YogaNode> {
     YGNodeRemoveAllChildren(m_node);
   }
 
-  YogaRect calculateLayout(double width, double height, int direction) {
-    YGNodeCalculateLayout(m_node, width, height, (YGDirection)direction);
+  YogaRect calculateLayout(double minWidth, double minHeight, double maxWidth, double maxHeight, int direction) {
+    // Simply override the minWidth and minHeight of the root node - may revisit later but seems OK.
+    YGNodeStyleSetMinWidth(m_node, minWidth);
+    YGNodeStyleSetMinHeight(m_node, minHeight);
+    YGNodeCalculateLayout(m_node, maxWidth, maxHeight, (YGDirection)direction);
     return rect();
   }
 

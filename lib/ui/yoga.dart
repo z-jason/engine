@@ -416,9 +416,36 @@ class YogaStyle {
         typedOther.aspectRatio == aspectRatio;
   }
 
-  // TODO(kaikaiz): https://github.com/flutter/flutter/issues/1356
-  // @override
-  // int get hashCode => hashValues(direction, flexDirection, justifyContent, alignContent, alignItems, alignSelf, positionType, flexWrap, overflow, display, flex, flexGrow, flexShrink, flexBasis, margin, position, padding, border, width, height, minWidth, minHeight, maxWidth, maxHeight, aspectRatio);
+  // Using hashList per https://github.com/flutter/flutter/issues/1356
+  @override
+  int get hashCode =>
+      hashList([
+        direction,
+        flexDirection,
+        justifyContent,
+        alignContent,
+        alignItems,
+        alignSelf,
+        positionType,
+        flexWrap,
+        overflow,
+        display,
+        flex,
+        flexGrow,
+        flexShrink,
+        flexBasis,
+        margin,
+        position,
+        padding,
+        border,
+        width,
+        height,
+        minWidth,
+        minHeight,
+        maxWidth,
+        maxHeight,
+        aspectRatio,
+      ]);
 
   @override
   String toString() {

@@ -119,7 +119,7 @@ class YogaValue {
 
 /// TODO(kaikaiz): there is no resolving logic - we simply pass it to Yoga.
 class YogaEdgeInsets {
-  YogaEdgeInsets({
+  const YogaEdgeInsets({
     this.left,
     this.top,
     this.right,
@@ -224,7 +224,7 @@ class YogaStyle {
   // TODO(kaikaiz): find way to map double.nan to YGFloatOptional.
   // TODO(kaikaiz): add assertions for double.
   // The comments are the default values in C++ side. Some fields have different default values for convenience, such as flexGrow and flexShrink.
-  YogaStyle({
+  const YogaStyle({
     this.direction, // YogaDirection.inherit
     this.flexDirection, // YogaFlexDirection.column
     this.justifyContent, // YogaJustify.flexStart

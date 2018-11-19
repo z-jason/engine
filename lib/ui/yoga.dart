@@ -479,6 +479,7 @@ class YogaStyle {
   }
 }
 
+@pragma('vm:entry-point')
 class YogaRect {
   // Created by engine, not available externally.
   @pragma('vm:entry-point')

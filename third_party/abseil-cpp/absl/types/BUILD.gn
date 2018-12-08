@@ -1,0 +1,115 @@
+# Copyright 2018 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("$flutter_root/third_party/abseil-cpp/absl/cc_library.gni")
+
+absl_cc_library("any") {
+  public = [
+    "any.h",
+  ]
+  deps = [
+    ":bad_any_cast",
+    "../base:config",
+    "../base:core_headers",
+    "../meta:type_traits",
+    "../utility",
+  ]
+}
+
+absl_cc_library("bad_any_cast") {
+  public = [
+    "bad_any_cast.h",
+  ]
+  deps = [
+    ":bad_any_cast_impl",
+    "../base:config",
+  ]
+}
+
+absl_cc_library("bad_any_cast_impl") {
+  sources = [
+    "bad_any_cast.cc",
+  ]
+  public = [
+    "bad_any_cast.h",
+  ]
+  deps = [
+    "../base",
+    "../base:config",
+  ]
+  visibility = []
+  visibility += [ ":*" ]
+}
+
+absl_cc_library("span") {
+  public = [
+    "span.h",
+  ]
+  deps = [
+    "../algorithm",
+    "../base:core_headers",
+    "../base:throw_delegate",
+    "../meta:type_traits",
+  ]
+}
+
+absl_cc_library("optional") {
+  sources = [
+    "optional.cc",
+  ]
+  public = [
+    "optional.h",
+  ]
+  deps = [
+    ":bad_optional_access",
+    "../base:config",
+    "../base:core_headers",
+    "../memory",
+    "../meta:type_traits",
+    "../utility",
+  ]
+}
+
+absl_cc_library("bad_optional_access") {
+  sources = [
+    "bad_optional_access.cc",
+  ]
+  public = [
+    "bad_optional_access.h",
+  ]
+  deps = [
+    "../base",
+    "../base:config",
+  ]
+}
+
+absl_cc_library("bad_variant_access") {
+  sources = [
+    "bad_variant_access.cc",
+  ]
+  public = [
+    "bad_variant_access.h",
+  ]
+  deps = [
+    "../base",
+    "../base:config",
+  ]
+}
+
+absl_cc_library("variant") {
+  sources = [
+    "internal/variant.h",
+  ]
+  public = [
+    "variant.h",
+  ]
+  deps = [
+    ":bad_variant_access",
+    "../base:base_internal",
+    "../base:config",
+    "../base:core_headers",
+    "../meta:type_traits",
+    "../utility",
+  ]
+}

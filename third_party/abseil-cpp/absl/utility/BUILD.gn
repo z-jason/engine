@@ -1,0 +1,16 @@
+# Copyright 2018 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("$flutter_root/third_party/abseil-cpp/absl/cc_library.gni")
+
+absl_cc_library("utility") {
+  public = [
+    "utility.h",
+  ]
+  deps = [
+    "../base:base_internal",
+    "../base:config",
+    "../meta:type_traits",
+  ]
+}

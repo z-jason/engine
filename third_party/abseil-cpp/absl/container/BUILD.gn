@@ -1,0 +1,193 @@
+# Copyright 2018 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("$flutter_root/third_party/abseil-cpp/absl/cc_library.gni")
+
+absl_cc_library("compressed_tuple") {
+  public = [
+    "internal/compressed_tuple.h",
+  ]
+  deps = [
+    "../utility",
+  ]
+}
+
+absl_cc_library("fixed_array") {
+  public = [
+    "fixed_array.h",
+  ]
+  deps = [
+    ":compressed_tuple",
+    "../algorithm",
+    "../base:core_headers",
+    "../base:dynamic_annotations",
+    "../base:throw_delegate",
+    "../memory",
+  ]
+}
+
+absl_cc_library("inlined_vector") {
+  public = [
+    "inlined_vector.h",
+  ]
+  deps = [
+    "../algorithm",
+    "../base:core_headers",
+    "../base:throw_delegate",
+    "../memory",
+  ]
+}
+
+absl_cc_library("flat_hash_map") {
+  public = [
+    "flat_hash_map.h",
+  ]
+  deps = [
+    ":container_memory",
+    ":hash_function_defaults",
+    ":raw_hash_map",
+    "../algorithm:container",
+    "../memory",
+  ]
+}
+
+absl_cc_library("flat_hash_set") {
+  public = [
+    "flat_hash_set.h",
+  ]
+  deps = [
+    ":container_memory",
+    ":hash_function_defaults",
+    ":raw_hash_set",
+    "../algorithm:container",
+    "../base:core_headers",
+    "../memory",
+  ]
+}
+
+absl_cc_library("node_hash_map") {
+  public = [
+    "node_hash_map.h",
+  ]
+  deps = [
+    ":container_memory",
+    ":hash_function_defaults",
+    ":node_hash_policy",
+    ":raw_hash_map",
+    "../algorithm:container",
+    "../memory",
+  ]
+}
+
+absl_cc_library("node_hash_set") {
+  public = [
+    "node_hash_set.h",
+  ]
+  deps = [
+    ":container_memory",
+    ":hash_function_defaults",
+    ":node_hash_policy",
+    ":raw_hash_set",
+    "../algorithm:container",
+    "../memory",
+  ]
+}
+
+absl_cc_library("container_memory") {
+  public = [
+    "internal/container_memory.h",
+  ]
+  deps = [
+    "../memory",
+    "../utility",
+  ]
+}
+
+absl_cc_library("hash_function_defaults") {
+  public = [
+    "internal/hash_function_defaults.h",
+  ]
+  deps = [
+    "../base:config",
+    "../hash",
+    "../strings",
+  ]
+}
+
+absl_cc_library("hash_policy_traits") {
+  public = [
+    "internal/hash_policy_traits.h",
+  ]
+  deps = [
+    "../meta:type_traits",
+  ]
+}
+
+absl_cc_library("hashtable_debug") {
+  public = [
+    "internal/hashtable_debug.h",
+  ]
+  deps = [
+    ":hashtable_debug_hooks",
+  ]
+}
+
+absl_cc_library("hashtable_debug_hooks") {
+  public = [
+    "internal/hashtable_debug_hooks.h",
+  ]
+}
+
+absl_cc_library("node_hash_policy") {
+  public = [
+    "internal/node_hash_policy.h",
+  ]
+}
+
+absl_cc_library("raw_hash_map") {
+  public = [
+    "internal/raw_hash_map.h",
+  ]
+  deps = [
+    ":container_memory",
+    ":raw_hash_set",
+  ]
+}
+
+absl_cc_library("raw_hash_set") {
+  sources = [
+    "internal/raw_hash_set.cc",
+  ]
+  public = [
+    "internal/raw_hash_set.h",
+  ]
+  deps = [
+    ":compressed_tuple",
+    ":container_memory",
+    ":hash_policy_traits",
+    ":hashtable_debug_hooks",
+    ":layout",
+    "../base:bits",
+    "../base:config",
+    "../base:core_headers",
+    "../base:endian",
+    "../memory",
+    "../meta:type_traits",
+    "../types:optional",
+    "../utility",
+  ]
+}
+
+absl_cc_library("layout") {
+  public = [
+    "internal/layout.h",
+  ]
+  deps = [
+    "../base:core_headers",
+    "../meta:type_traits",
+    "../strings",
+    "../types:span",
+    "../utility",
+  ]
+}

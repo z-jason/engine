@@ -1,0 +1,128 @@
+# Copyright 2018 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/sanitizers/sanitizers.gni")
+import("$flutter_root/third_party/abseil-cpp/absl/cc_library.gni")
+
+absl_cc_library("stacktrace") {
+  sources = [
+    "stacktrace.cc",
+  ]
+  public = [
+    "stacktrace.h",
+  ]
+  deps = [
+    ":debugging_internal",
+    "../base",
+    "../base:core_headers",
+  ]
+}
+
+absl_cc_library("symbolize") {
+  sources = [
+    "symbolize.cc",
+    "symbolize_elf.inc",
+    "symbolize_unimplemented.inc",
+    "symbolize_win32.inc",
+  ]
+  public = [
+    "internal/symbolize.h",
+    "symbolize.h",
+  ]
+  deps = [
+    ":debugging_internal",
+    ":demangle_internal",
+    "../base",
+    "../base:core_headers",
+    "../base:malloc_internal",
+  ]
+}
+
+absl_cc_library("examine_stack") {
+  sources = [
+    "internal/examine_stack.cc",
+  ]
+  public = [
+    "internal/examine_stack.h",
+  ]
+  visibility = []
+  visibility += [ ":*" ]
+  deps = [
+    ":stacktrace",
+    ":symbolize",
+    "../base",
+    "../base:core_headers",
+  ]
+}
+
+absl_cc_library("failure_signal_handler") {
+  sources = [
+    "failure_signal_handler.cc",
+  ]
+  public = [
+    "failure_signal_handler.h",
+  ]
+  deps = [
+    ":examine_stack",
+    ":stacktrace",
+    "../base",
+    "../base:config",
+    "../base:core_headers",
+  ]
+}
+
+absl_cc_library("debugging_internal") {
+  sources = [
+    "internal/address_is_readable.cc",
+    "internal/elf_mem_image.cc",
+    "internal/vdso_support.cc",
+  ]
+  public = [
+    "internal/address_is_readable.h",
+    "internal/elf_mem_image.h",
+    "internal/stacktrace_config.h",
+    "internal/vdso_support.h",
+  ]
+  deps = [
+    "../base",
+    "../base:core_headers",
+    "../base:dynamic_annotations",
+  ]
+}
+
+absl_cc_library("demangle_internal") {
+  sources = [
+    "internal/demangle.cc",
+  ]
+  public = [
+    "internal/demangle.h",
+  ]
+  deps = [
+    "../base",
+    "../base:core_headers",
+  ]
+}
+
+absl_cc_library("leak_check") {
+  if (is_ios || is_win) {
+    sources = []
+    public = []
+  } else {
+    sources = [
+      "leak_check.cc",
+    ]
+    public = [
+      "leak_check.h",
+    ]
+  }
+  deps = [
+    "../base:core_headers",
+  ]
+}
+
+absl_cc_library("leak_check_disable") {
+  sources = [
+    "leak_check_disable.cc",
+  ]
+}

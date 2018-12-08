@@ -1,0 +1,41 @@
+# Copyright 2018 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("$flutter_root/third_party/abseil-cpp/absl/cc_library.gni")
+
+absl_cc_library("hash") {
+  sources = [
+    "internal/hash.cc",
+    "internal/hash.h",
+  ]
+  public = [
+    "hash.h",
+  ]
+  deps = [
+    ":city",
+    "../base:core_headers",
+    "../base:endian",
+    "../container:fixed_array",
+    "../meta:type_traits",
+    "../numeric:int128",
+    "../strings",
+    "../types:optional",
+    "../types:variant",
+    "../utility",
+  ]
+}
+
+absl_cc_library("city") {
+  public = [
+    "internal/city.h",
+  ]
+  sources = [
+    "internal/city.cc",
+  ]
+  deps = [
+    "../base:config",
+    "../base:core_headers",
+    "../base:endian",
+  ]
+}

@@ -4,7 +4,10 @@ config("yoga_config") {
   visibility = [ ":*" ]
   include_dirs = [ "src" ]
   # To override //build/config/clang:extra_warnings
-  cflags = [ "-Wno-header-hygiene" ]
+  cflags = []
+  if (is_clang) {
+    cflags += [ "-Wno-header-hygiene" ]
+  }
 }
 
 source_set("yoga") {
@@ -31,5 +34,5 @@ source_set("yoga") {
     "src/Yoga.h",
   ]
 
-  public_configs = [ ":yoga_config" ]
+  configs += [ ":yoga_config" ]
 }

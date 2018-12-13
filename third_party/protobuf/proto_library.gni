@@ -347,8 +347,6 @@ template("proto_library") {
 
     sources = get_target_outputs(":$action_name")
 
-    configs -= [ "//build/config/compiler:no_rtti" ]
-    configs += [ "//build/config/compiler:rtti" ]
     if (defined(invoker.extra_configs)) {
       configs += invoker.extra_configs
     }

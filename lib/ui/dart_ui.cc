@@ -29,6 +29,8 @@
 #include "flutter/lib/ui/text/paragraph.h"
 #include "flutter/lib/ui/text/paragraph_builder.h"
 #include "flutter/lib/ui/window/window.h"
+#include "flutter/lib/ui/yte/eko_processor.h"
+#include "flutter/lib/ui/yte/unified_resolver.h"
 #include "third_party/tonic/converter/dart_converter.h"
 #include "third_party/tonic/logging/dart_error.h"
 
@@ -91,6 +93,8 @@ void DartUI::InitForGlobal() {
     Vertices::RegisterNatives(g_natives);
     Window::RegisterNatives(g_natives);
     YogaNode::RegisterNatives(g_natives);
+    YteEkoProcessor::RegisterNatives(g_natives);
+    YteUnifiedResolver::RegisterNatives(g_natives);
 
     // Secondary isolates do not provide UI-related APIs.
     g_natives_secondary = new tonic::DartLibraryNatives();

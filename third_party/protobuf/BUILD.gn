@@ -6,6 +6,7 @@ import("//build/config/sanitizers/sanitizers.gni")
 config("protobuf_config") {
   include_dirs = [ "src" ]
   defines = [
+    "GOOGLE_PROTOBUF_NO_RTTI",
     "GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER",
   ]
   if (!is_win) {
@@ -413,8 +414,6 @@ component("protobuf_lite") {
   if (is_win) {
     configs -= [ "//build/config/win:lean_and_mean" ]
   }
-  configs -= [ "//build/config/compiler:no_rtti" ]
-  configs += [ "//build/config/compiler:rtti" ]
   public_configs = [
     ":protobuf_config",
     # TODO(jschuh): crbug.com/167187 fix size_t to int truncations.
@@ -464,8 +463,6 @@ static_library("protobuf_full") {
   if (is_win) {
     configs -= [ "//build/config/win:lean_and_mean" ]
   }
-  configs -= [ "//build/config/compiler:no_rtti" ]
-  configs += [ "//build/config/compiler:rtti" ]
   public_configs = [
     ":protobuf_config",
     # TODO(jschuh): crbug.com/167187 fix size_t to int truncations.
@@ -575,8 +572,6 @@ if (current_toolchain == host_toolchain) {
       # This is defined internally, don't warn on duplicate.
       configs -= [ "//build/config/win:lean_and_mean" ]
     }
-    configs -= [ "//build/config/compiler:no_rtti" ]
-    configs += [ "//build/config/compiler:rtti" ]
     public_configs = [ ":protobuf_config" ]
     cflags = protobuf_lite_cflags
     public_deps = [

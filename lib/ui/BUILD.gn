@@ -102,10 +102,10 @@ source_set("ui") {
     "window/window.h",
     "yte/eko_processor.cc",
     "yte/eko_processor.h",
-    "yte/result_converter.cc",
-    "yte/result_converter.h",
     "yte/unified_resolver.cc",
     "yte/unified_resolver.h",
+    "yte/utils.h",
+    "yte/utils.cc",
   ]
 
   public_configs = [ "$flutter_root:config" ]
